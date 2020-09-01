@@ -61,7 +61,7 @@ class MyScheduler:
         self._hue = HueWrapper()
         self._enviro = EnviroWrapper()
         self._kasa = KasaWrapper()
-
+        self._bright = 8
         self._init()
 
     def _init(self):
@@ -91,20 +91,28 @@ class MyScheduler:
             self._hue.on()
             target_lux = get_target_lux()
 
-
-
-            lux = self._enviro.get_lux()
-            # TODO hue manage brughtness
-            # TODO update display
+            for _ in range(24):
+                actual_lux = self._enviro.get_lux()
+                time.sleep(5)
+                lux_delta = target_lux - actual_lux
+                lux_delta = max(-15, min(lux_delta, 15))
+                self.bright = self.bright + lux_delta
+                self.bright = max(0, min(self.bright, 255))
+                logging.info('target: {} actual: {} delta: {} brightness: {}'.format(
+                    target_lux, actual_lux, lux_delta, self.bright))
+                self._hue.brightness(self.bright)
 
     def _manage_heater(self):
         temperature = self._enviro.get_temperature()
+        logging.info('temperature: {}'.format(temperature))
 
-        # TODO manage heater
         switch_off = temperature > 18.0
         switch_on = temperature < 17.5
-        # TODO update display
-        pass
+
+        if switch_on:
+            self._kasa.switch_on()
+        elif switch_off:
+            self._kasa.switch_off()
 
     def _get_sunset_sunrise(self):
         a = Astral()
@@ -182,5 +190,3 @@ class MyScheduler:
     def _set_day_factor(self, day_factor):
         logging.info('day factor: {}'.format(day_factor))
         colour_helper.set_day_factor(day_factor)
-
-
