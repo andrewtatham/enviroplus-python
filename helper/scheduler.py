@@ -83,8 +83,8 @@ class MyScheduler:
 
     def stop(self):
         self._scheduler.shutdown()
-        if self._hue:
-            self._hue.off()
+        # if self._hue:
+        #     self._hue.off()
 
     def _manage_lights(self):
         if self._hue.is_on:
@@ -96,11 +96,11 @@ class MyScheduler:
                 time.sleep(5)
                 lux_delta = target_lux - actual_lux
                 lux_delta = max(-15, min(lux_delta, 15))
-                self.bright = self.bright + lux_delta
-                self.bright = max(0, min(self.bright, 255))
+                self._bright = self._bright + lux_delta
+                self._bright = max(0, min(self._bright, 255))
                 logging.info('target: {} actual: {} delta: {} brightness: {}'.format(
-                    target_lux, actual_lux, lux_delta, self.bright))
-                self._hue.brightness(self.bright)
+                    target_lux, actual_lux, lux_delta, self._bright))
+                self._hue.brightness(self._bright)
 
     def _manage_heater(self):
         temperature = self._enviro.get_temperature()
