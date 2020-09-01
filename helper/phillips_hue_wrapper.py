@@ -22,6 +22,20 @@ class HueWrapper(object):
                 {'name': 'Left White Strip', 'is_colour': False},
             ]
         if not profiles:
+            bright_white_mode = {
+                'name': 'bright white',
+                'profile_state': {},
+                'lights': {
+                    'Hue color spot 1': {'is_on': True, 'light_state': {}, 'func': self._normal_func},
+                    'Hue color spot 2': {'is_on': True, 'light_state': {}, 'func': self._normal_func},
+                    'Hue color spot 3': {'is_on': True, 'light_state': {}, 'func': self._normal_func},
+                    'DEATH STAR': {'is_on': True, 'light_state': {}, 'func': self._normal_func},
+                    'Right Colour Strip': {'is_on': False, 'light_state': {}, 'func': None},
+                    'Right White Strip': {'is_on': True, 'light_state': {}, 'func': self._normal_func},
+                    'Left Colour Strip': {'is_on': False, 'light_state': {}, 'func': None},
+                    'Left White Strip': {'is_on': True, 'light_state': {}, 'func': self._normal_func},
+                }
+            }
             normal_mode = {
                 'name': 'normal',
                 'profile_state': {},
@@ -51,8 +65,9 @@ class HueWrapper(object):
                 }
             }
             profiles = [
+                bright_white_mode,
                 normal_mode,
-                # colour_mode,
+                colour_mode,
             ]
 
         self.light_configs = light_configs

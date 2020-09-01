@@ -1,12 +1,10 @@
-from helper.phillips_hue_wrapper import HueWrapper
+from helper.scheduler import MyScheduler
 
+scheduler = MyScheduler()
 
-    hue = HueWrapper()
-    hue.connect()
-    if hue.is_on:
-        hue.on()
-    hue.colour_loop_off()
-    if hue.is_off:
-        hue.off()
-
-
+try:
+    scheduler.start()
+except KeyboardInterrupt:
+    pass
+finally:
+    scheduler.stop()

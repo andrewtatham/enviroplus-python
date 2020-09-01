@@ -1,3 +1,6 @@
 apscheduler
 phue
 pyHS100
+pytz
+astral
+colour
