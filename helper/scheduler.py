@@ -72,7 +72,7 @@ class MyScheduler:
 
         self._scheduler.add_job(func=self._get_sunset_sunrise, trigger=at_midnight)
         self._scheduler.add_job(func=self._get_sunset_sunrise)
-        self._scheduler.add_job(self._manage_lights, trigger=every_five_minutes)
+        self._scheduler.add_job(self._manage_lights, trigger=every_minute)
         self._scheduler.add_job(self._manage_lights)
         self._scheduler.add_job(self._manage_heater, trigger=every_five_minutes)
         self._scheduler.add_job(self._manage_heater)
