@@ -109,7 +109,7 @@ class EnviroWrapper:
     def get_lux(self):
         unit = "Lux"
         data = ltr559.get_lux()
-        self.display_text(1, data, unit)
+        self.display_text("light", data, unit)
         return data
 
     def get_temperature(self):
@@ -123,7 +123,7 @@ class EnviroWrapper:
         cpu_adjustment = - ((avg_cpu_temp - raw_temp) / self.factor)
         data = raw_temp + cpu_adjustment
         sma_temp = self.sma(data)
-        self.display_text(0, sma_temp, unit)
+        self.display_text("temperature", sma_temp, unit)
         message = "raw: {: .1f} cpu: {: .1f} adjustment: {: .1f} calc: {: .1f} sma: {: .1f} ".format(raw_temp,
                                                                                                      avg_cpu_temp,
                                                                                                      cpu_adjustment,
