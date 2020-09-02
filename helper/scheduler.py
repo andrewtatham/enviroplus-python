@@ -97,7 +97,7 @@ class MyScheduler:
                 lux_delta = target_lux - actual_lux
                 lux_delta = max(-48, min(lux_delta, 48))
                 self._bright = self._bright + lux_delta
-                self._bright = max(0, min(self._bright, 254))
+                self._bright = max(1, min(self._bright, 254))
                 logging.info('target: {} actual: {} delta: {} brightness: {}'.format(
                     target_lux, actual_lux, lux_delta, self._bright))
                 self._hue.brightness(self._bright)
