@@ -89,10 +89,11 @@ class MyScheduler:
         #     self._hue.off()
 
     def _manage_lights(self):
+        actual_lux = self._enviro.get_lux()
+        logging.info('light: {}'.format(actual_lux))
         if self._hue.is_on:
             self._hue.on()
             target_lux = get_target_lux()
-            actual_lux = self._enviro.get_lux()
             lux_delta = target_lux - actual_lux
             lux_delta = max(-48, min(lux_delta, 48))
             self._bright = self._bright + lux_delta
