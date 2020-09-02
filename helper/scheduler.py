@@ -91,7 +91,7 @@ class MyScheduler:
             self._hue.on()
             target_lux = get_target_lux()
 
-            for _ in range(24):
+            for _ in range(3):
                 actual_lux = self._enviro.get_lux()
                 time.sleep(5)
                 lux_delta = target_lux - actual_lux
@@ -100,9 +100,7 @@ class MyScheduler:
                 self._bright = max(1, min(self._bright, 254))
                 logging.info('target: {} actual: {} delta: {} brightness: {}'.format(
                     target_lux, actual_lux, lux_delta, self._bright))
-                self._hue.brightness(self._bright)
-                self._hue.do_whatever()
-
+                self._hue.do_whatever(bright=self._bright)
 
     def _manage_heater(self):
         temperature = self._enviro.get_temperature()

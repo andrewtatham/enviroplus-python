@@ -184,7 +184,7 @@ class HueWrapper(object):
     def next_profile(self):
         self.profile = next(self.profiles)
 
-    def do_whatever(self):
+    def do_whatever(self, bright=None):
         if self.is_on:
             for light in self.lights:
                 light_profile = self.profile['lights'][light.name]
@@ -195,13 +195,17 @@ class HueWrapper(object):
                     light_func = light_profile['func']
                     light_state = light_profile['light_state']
                     if light_func:
-                        light_func(light=light, light_state=light_state, profile_state=profile_state)
+                        light_func(light=light, light_state=light_state, profile_state=profile_state, bright=bright)
 
     def _normal_func(self, light, **kwargs):
         # (white only) 154 is the coolest, 500 is the warmest
         ct = 500 + int(colour_helper.day_factor * (154 - 500))
-        # // brightness between 0-254 (NB 0 is not off!)
-        brightness = int(colour_helper.day_factor * 254)
+
+        if "bright" in kwargs and kwargs["bright"]:
+            brightness = kwargs["bright"]
+        else:
+            # // brightness between 0-254 (NB 0 is not off!)
+            brightness = int(colour_helper.day_factor * 254)
 
         light.colortemp = ct
         light.brightness = brightness
@@ -211,8 +215,11 @@ class HueWrapper(object):
         # hue' parameter has the range 0-65535 so represents approximately 182*degrees
         hue = int(colour_helper.day_factor * 65535)
         sat = 254
-        # // brightness between 0-254 (NB 0 is not off!)
-        brightness = int(colour_helper.day_factor * 254)
+        if "bright" in kwargs and kwargs["bright"]:
+            brightness = kwargs["bright"]
+        else:
+            # // brightness between 0-254 (NB 0 is not off!)
+            brightness = int(colour_helper.day_factor * 254)
         light.hue = hue
         light.saturation = sat
         light.brightness = brightness
