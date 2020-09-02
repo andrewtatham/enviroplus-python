@@ -26,6 +26,8 @@ at_morning = CronTrigger(hour=6)
 at_bedtime = CronTrigger(hour=23)
 every_fifteen_minutes = CronTrigger(minute="*/15")
 every_five_minutes = CronTrigger(minute="*/5")
+every_even_minute = CronTrigger(minute="*/2")
+every_odd_minute = CronTrigger(minute="1-59/2")
 every_minute = CronTrigger(minute="*")
 
 tz = pytz.timezone("Europe/London")
@@ -72,9 +74,9 @@ class MyScheduler:
 
         self._scheduler.add_job(func=self._get_sunset_sunrise, trigger=at_midnight)
         self._scheduler.add_job(func=self._get_sunset_sunrise)
-        self._scheduler.add_job(self._manage_lights, trigger=every_minute)
+        self._scheduler.add_job(self._manage_lights, trigger=every_even_minute)
         self._scheduler.add_job(self._manage_lights)
-        self._scheduler.add_job(self._manage_heater, trigger=every_five_minutes)
+        self._scheduler.add_job(self._manage_heater, trigger=every_odd_minute)
         self._scheduler.add_job(self._manage_heater)
 
     def start(self):
@@ -90,20 +92,17 @@ class MyScheduler:
         if self._hue.is_on:
             self._hue.on()
             target_lux = get_target_lux()
-
-            for _ in range(3):
-                actual_lux = self._enviro.get_lux()
-                time.sleep(5)
-                lux_delta = target_lux - actual_lux
-                lux_delta = max(-48, min(lux_delta, 48))
-                self._bright = self._bright + lux_delta
-                self._bright = max(0, min(self._bright, 254))
-                logging.info('target: {} actual: {} delta: {} brightness: {}'.format(
-                    target_lux, actual_lux, lux_delta, self._bright))
-                if self._bright == 0 and lux_delta < 0:
-                    self._hue.off()
-                else:
-                    self._hue.do_whatever(bright=self._bright)
+            actual_lux = self._enviro.get_lux()
+            lux_delta = target_lux - actual_lux
+            lux_delta = max(-48, min(lux_delta, 48))
+            self._bright = self._bright + lux_delta
+            self._bright = max(0, min(self._bright, 254))
+            logging.info('target: {} actual: {} delta: {} brightness: {}'.format(
+                target_lux, actual_lux, lux_delta, self._bright))
+            if self._bright == 0 and lux_delta < 0:
+                self._hue.off()
+            else:
+                self._hue.do_whatever(bright=self._bright)
 
     def _manage_heater(self):
         temperature = self._enviro.get_temperature()
