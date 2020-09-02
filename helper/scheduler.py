@@ -63,7 +63,7 @@ class MyScheduler:
         self._hue = HueWrapper()
         self._enviro = EnviroWrapper()
         self._kasa = KasaWrapper()
-        self._bright = 8
+        self._bright = 0
         self._init()
 
     def _init(self):
@@ -94,7 +94,7 @@ class MyScheduler:
         if self._hue.is_on:
             target_lux = get_target_lux()
             lux_delta = target_lux - actual_lux
-            lux_delta = max(-48, min(lux_delta, 48))
+            lux_delta = max(-128, min(lux_delta, 128))
             self._bright = self._bright + lux_delta
             self._bright = max(0, min(self._bright, 254))
             logging.info('target: {} actual: {} delta: {} brightness: {}'.format(
