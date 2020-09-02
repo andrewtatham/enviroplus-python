@@ -194,7 +194,7 @@ class HueWrapper(object):
                         light.on = light_profile['is_on']
                     light_func = light_profile['func']
                     light_state = light_profile['light_state']
-                    if light_func:
+                    if light_profile['is_on'] and light_func:
                         light_func(light=light, light_state=light_state, profile_state=profile_state, bright=bright)
 
     def _normal_func(self, light, **kwargs):
