@@ -61,7 +61,7 @@ class EnviroWrapper:
 
         # Tuning factor for compensation. Decrease this number to adjust the
         # temperature down, and increase to adjust up
-        self.factor = 1.5
+        self.factor = 2.5
 
         self.sma_values = []
 
