@@ -63,8 +63,6 @@ class EnviroWrapper:
         # temperature down, and increase to adjust up
         self.factor = 1.0
 
-        self.sma_values = []
-
         # Create a values dict to store the data
         self.variables = ["temperature",
                           "light"]
@@ -74,12 +72,6 @@ class EnviroWrapper:
             self.values[v] = [1] * self.WIDTH
 
         self.cpu_temps = [get_cpu_temperature()] * 5
-
-    def sma(self, value):
-        self.sma_values.insert(0, value)
-        while len(self.sma_values) > 5:
-            self.sma_values.pop()
-        return mean(self.sma_values)
 
     # Displays data and text on the 0.96" LCD
     def display_text(self, variable, data, unit):
@@ -122,14 +114,13 @@ class EnviroWrapper:
         raw_temp = self.bme280.get_temperature()
         cpu_adjustment = - ((avg_cpu_temp - raw_temp) / self.factor)
         data = raw_temp + cpu_adjustment
-        sma_temp = self.sma(data)
-        self.display_text("temperature", sma_temp, unit)
-        message = "raw: {: .1f} cpu: {: .1f} adjustment: {: .1f} calc: {: .1f} sma: {: .1f} ".format(raw_temp,
-                                                                                                     avg_cpu_temp,
-                                                                                                     cpu_adjustment,
-                                                                                                     data, sma_temp)
+        self.display_text("temperature", data, unit)
+        message = "raw: {: .1f} cpu: {: .1f} adjustment: {: .1f} calc: {: .1f} ".format(raw_temp,
+                                                                                        avg_cpu_temp,
+                                                                                        cpu_adjustment,
+                                                                                        data)
         logging.info(message)
-        return sma_temp
+        return data
 
 
 def get_cpu_temperature():
