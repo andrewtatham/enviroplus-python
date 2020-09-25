@@ -64,6 +64,7 @@ class MyScheduler:
         self._enviro = EnviroWrapper()
         self._kasa = KasaWrapper()
         self._bright = 0
+        self._heater_is_on = False
         self._init()
 
     def _init(self):
@@ -108,13 +109,15 @@ class MyScheduler:
         temperature = self._enviro.get_temperature()
         logging.info('temperature: {}'.format(temperature))
 
-        switch_off = temperature > 18.0
-        switch_on = temperature < 17.5
+        switch_off = self._heater_is_on and temperature > 18.0
+        switch_on = not self._heater_is_on and temperature < 17.5
 
         if switch_on:
             self._kasa.switch_on()
+            self._heater_is_on = True
         elif switch_off:
             self._kasa.switch_off()
+            self._heater_is_on = False
 
     def _get_sunset_sunrise(self):
         a = Astral()
