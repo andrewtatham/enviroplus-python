@@ -112,8 +112,8 @@ class MyScheduler:
         weekday = now.weekday()
         hour = now.hour
         in_work_hours = 0 <= weekday <= 4 and 7 <= hour <= 14
-        switch_off = self._heater_is_on and temperature > 17.0
-        switch_on = not self._heater_is_on and temperature < 15.0 and in_work_hours
+        switch_off = self._heater_is_on and temperature > 16.0
+        switch_on = not self._heater_is_on and temperature < 14.0 and in_work_hours
 
         if switch_on:
             self._kasa.switch_on()
