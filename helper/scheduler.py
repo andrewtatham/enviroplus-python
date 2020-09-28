@@ -108,9 +108,12 @@ class MyScheduler:
     def _manage_heater(self):
         temperature = self._enviro.get_temperature()
         logging.info('temperature: {}'.format(temperature))
-
-        switch_off = self._heater_is_on and temperature > 18.0
-        switch_on = not self._heater_is_on and temperature < 17.5
+        now = datetime.datetime.now()
+        weekday = now.weekday()
+        hour = now.hour
+        in_work_hours = 0 <= weekday <= 4 and 7 <= hour <= 14
+        switch_off = self._heater_is_on and temperature > 17.5
+        switch_on = not self._heater_is_on and temperature < 17.0 and in_work_hours
 
         if switch_on:
             self._kasa.switch_on()
