@@ -1,3 +1,5 @@
+import itertools
+
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
@@ -29,6 +31,7 @@ every_five_minutes = CronTrigger(minute="*/5")
 every_even_minute = CronTrigger(minute="*/2")
 every_odd_minute = CronTrigger(minute="1-59/2")
 every_minute = CronTrigger(minute="*")
+every_fifteen_seconds = CronTrigger(second="*/15")
 
 tz = pytz.timezone("Europe/London")
 is_linux = platform.platform().startswith('Linux')
@@ -66,6 +69,10 @@ class MyScheduler:
         self._bright = 0
         self._heater_is_on = False
         self._init()
+        self._jobs = itertools.cycle([
+            self._manage_heater,
+            self._manage_lights,
+        ])
 
     def _init(self):
         logging.basicConfig(level=logging.INFO)
@@ -75,10 +82,9 @@ class MyScheduler:
 
         self._scheduler.add_job(func=self._get_sunset_sunrise, trigger=at_midnight)
         self._scheduler.add_job(func=self._get_sunset_sunrise)
-        self._scheduler.add_job(self._manage_lights, trigger=every_even_minute)
-        self._scheduler.add_job(self._manage_lights)
-        self._scheduler.add_job(self._manage_heater, trigger=every_odd_minute)
-        self._scheduler.add_job(self._manage_heater)
+
+        self._scheduler.add_job(self._manage_next, trigger=every_fifteen_seconds)
+        self._scheduler.add_job(self._manage_all)
 
     def start(self):
         self._scheduler.print_jobs()
@@ -88,6 +94,14 @@ class MyScheduler:
         self._scheduler.shutdown()
         # if self._hue:
         #     self._hue.off()
+
+    def _manage_all(self):
+        for job in self._jobs:
+            job()
+
+    def _manage_next(self):
+        job = next(self._jobs)
+        job()
 
     def _manage_lights(self):
         actual_lux = self._enviro.get_lux()
