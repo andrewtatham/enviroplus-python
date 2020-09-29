@@ -31,6 +31,7 @@ every_five_minutes = CronTrigger(minute="*/5")
 every_even_minute = CronTrigger(minute="*/2")
 every_odd_minute = CronTrigger(minute="1-59/2")
 every_minute = CronTrigger(minute="*")
+every_thirty_seconds = CronTrigger(second="*/30")
 every_fifteen_seconds = CronTrigger(second="*/15")
 
 tz = pytz.timezone("Europe/London")
@@ -69,10 +70,11 @@ class MyScheduler:
         self._bright = 0
         self._heater_is_on = False
         self._init()
-        self._jobs = itertools.cycle([
+        self._jobs_list = [
             self._manage_heater,
             self._manage_lights,
-        ])
+        ]
+        self._jobs_cycle = itertools.cycle(self._jobs_list)
 
     def _init(self):
         logging.basicConfig(level=logging.INFO)
@@ -83,7 +85,7 @@ class MyScheduler:
         self._scheduler.add_job(func=self._get_sunset_sunrise, trigger=at_midnight)
         self._scheduler.add_job(func=self._get_sunset_sunrise)
 
-        self._scheduler.add_job(self._manage_next, trigger=every_fifteen_seconds)
+        self._scheduler.add_job(self._manage_next, trigger=every_thirty_seconds)
         self._scheduler.add_job(self._manage_all)
 
     def start(self):
@@ -96,12 +98,12 @@ class MyScheduler:
         #     self._hue.off()
 
     def _manage_all(self):
-        for job in self._jobs:
+        for job in self._jobs_list:
             job()
             time.sleep(5)
 
     def _manage_next(self):
-        job = next(self._jobs)
+        job = next(self._jobs_cycle)
         job()
 
     def _manage_lights(self):
