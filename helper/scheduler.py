@@ -98,6 +98,7 @@ class MyScheduler:
     def _manage_all(self):
         for job in self._jobs:
             job()
+            time.sleep(5)
 
     def _manage_next(self):
         job = next(self._jobs)
@@ -120,12 +121,15 @@ class MyScheduler:
                 self._hue.do_whatever(bright=self._bright)
 
     def _manage_heater(self):
-        temperature = self._enviro.get_temperature()
-        logging.info('temperature: {}'.format(temperature))
         now = datetime.datetime.now()
         weekday = now.weekday()
         hour = now.hour
         in_work_hours = 0 <= weekday <= 4 and 7 <= hour <= 14
+        logging.info('weekday: {} hour: {} in_work_hours: {}'.format(weekday, hour, in_work_hours))
+
+        temperature = self._enviro.get_temperature()
+        logging.info('temperature: {}'.format(temperature))
+
         switch_off = temperature > 16.0
         switch_on = temperature < 15.0 and in_work_hours
 
