@@ -1,3 +1,5 @@
+import logging
+
 import pyHS100
 
 
@@ -6,11 +8,13 @@ class KasaWrapper:
         self.heater_is_on = False
 
     def get_device(self, device_name):
-        for dev in pyHS100.Discover.discover().values():
-            name = dev.alias
-            print(name)
-            if name == device_name:
+        devices = pyHS100.Discover.discover().values()
+        for dev in devices:
+            if dev.alias == device_name:
                 return dev
+        logging.info('Could not find {}'.format(device_name))
+        for dev in devices:
+            logging.info(dev.alias)
 
     def switch_off(self):
         if self.heater_is_on:
