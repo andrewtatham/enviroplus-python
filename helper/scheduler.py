@@ -114,10 +114,10 @@ class MyScheduler:
             self._bright = max(0, min(self._bright, 254))
             logging.info('target: {} actual: {} delta: {} brightness: {}'.format(
                 target_lux, actual_lux, lux_delta, self._bright))
-            if self._bright == 0 and lux_delta < 0:
-                self._hue.off()
-            else:
-                self._hue.do_whatever(bright=self._bright)
+            # if self._bright == 0 and lux_delta < 0:
+            #     self._hue.off()
+            # else:
+            self._hue.do_whatever(bright=self._bright)
 
     def _manage_heater(self):
         now = datetime.datetime.now()
