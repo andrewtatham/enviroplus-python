@@ -50,13 +50,13 @@ class MuteFilter(object):
 def get_target_lux():
     now = datetime.datetime.now(tz)
     if now.hour <= 6:
-        return 25
+        return 1
     elif now.hour <= 17:
         return 400
     elif now.hour <= 20:
-        return 100
-    else:
         return 25
+    else:
+        return 1
 
 
 class MyScheduler:
