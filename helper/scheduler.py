@@ -123,7 +123,9 @@ class MyScheduler:
         now = datetime.datetime.now()
         weekday = now.weekday()
         hour = now.hour
+
         in_work_hours = 0 <= weekday <= 4 and 7 <= hour <= 14
+        in_work_hours = False
         logging.info('weekday: {} hour: {} in_work_hours: {}'.format(weekday, hour, in_work_hours))
 
         temperature = self._enviro.get_temperature()
