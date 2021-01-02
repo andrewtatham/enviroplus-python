@@ -4,8 +4,6 @@ import pyHS100
 
 
 class KasaWrapper:
-    def __init__(self):
-
     def get_device(self, device_name):
         devices = pyHS100.Discover.discover().values()
         for dev in devices:
