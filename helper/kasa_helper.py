@@ -5,7 +5,6 @@ import pyHS100
 
 class KasaWrapper:
     def __init__(self):
-        self.heater_is_on = False
 
     def get_device(self, device_name):
         devices = pyHS100.Discover.discover().values()
@@ -17,15 +16,11 @@ class KasaWrapper:
             logging.info(dev.alias)
 
     def switch_off(self):
-        if self.heater_is_on:
-            heater = self.get_device('Heater')
-            if heater:
-                heater.turn_off()
-                self.heater_is_on = False
+        heater = self.get_device('Heater')
+        if heater:
+            heater.turn_off()
 
     def switch_on(self):
-        if not self.heater_is_on:
-            heater = self.get_device('Heater')
-            if heater:
-                heater.turn_on()
-                self.heater_is_on = True
+        heater = self.get_device('Heater')
+        if heater:
+            heater.turn_on()
