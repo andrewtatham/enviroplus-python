@@ -131,8 +131,8 @@ class MyScheduler:
         temperature = self._enviro.get_temperature()
         logging.info('temperature: {}'.format(temperature))
 
-        switch_off = temperature > 15.5
-        switch_on = temperature < 14.5 and in_work_hours
+        switch_off = temperature > 15.0
+        switch_on = temperature < 14.0 and in_work_hours
 
         if switch_on:
             logging.info('Switching heater on')
