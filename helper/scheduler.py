@@ -146,7 +146,7 @@ class MyScheduler:
             target_temperature += 1
 
         switch_off = temperature > target_temperature
-        switch_on = temperature < 14.0 and in_work_hours
+        switch_on = temperature < target_temperature and in_work_hours
 
         if switch_on:
             logging.info('Switching heater on')
