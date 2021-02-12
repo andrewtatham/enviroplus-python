@@ -123,15 +123,29 @@ class MyScheduler:
         now = datetime.datetime.now()
         weekday = now.weekday()
         hour = now.hour
+        month = now.month
 
         in_work_hours = 0 <= weekday <= 4 and 6 <= hour <= 15
         # in_work_hours = False
+
+        is_winter = month <= 3 or month >= 10
+        is_early_morning = 0 <= hour <= 8
+        is_morning = 0 <= hour <= 12
+
         logging.info('weekday: {} hour: {} in_work_hours: {}'.format(weekday, hour, in_work_hours))
 
         temperature = self._enviro.get_temperature()
         logging.info('temperature: {}'.format(temperature))
 
-        switch_off = temperature > 15.0
+        target_temperature = 15.0
+        if is_winter:
+            target_temperature += 1
+        if is_early_morning:
+            target_temperature += 1
+        if is_morning:
+            target_temperature += 1
+
+        switch_off = temperature > target_temperature
         switch_on = temperature < 14.0 and in_work_hours
 
         if switch_on:
