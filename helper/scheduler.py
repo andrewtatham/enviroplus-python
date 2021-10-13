@@ -125,7 +125,7 @@ class MyScheduler:
         hour = now.hour
         month = now.month
 
-        in_work_hours = 0 <= weekday <= 4 and 6 <= hour <= 14
+        in_work_hours = 0 <= weekday <= 4 and 8 <= hour <= 14
         # in_work_hours = False
 
         is_winter = month <= 3 or month >= 10
