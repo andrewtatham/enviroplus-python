@@ -1,3 +1,4 @@
+import datetime
 import pprint
 import random
 import time
@@ -22,7 +23,7 @@ class HueWrapper(object):
                 {'name': 'Left White Strip', 'is_colour': False},
             ]
         if not profiles:
-            bright_white_mode = {
+            self.bright_white_mode = {
                 'name': 'bright white',
                 'profile_state': {},
                 'lights': {
@@ -36,7 +37,7 @@ class HueWrapper(object):
                     'Left White Strip': {'is_on': True, 'light_state': {}, 'func': self._normal_func},
                 }
             }
-            normal_mode = {
+            self.normal_mode = {
                 'name': 'normal',
                 'profile_state': {},
                 'lights': {
@@ -50,7 +51,7 @@ class HueWrapper(object):
                     'Left White Strip': {'is_on': True, 'light_state': {}, 'func': self._normal_func},
                 }
             }
-            colour_mode = {
+            self.colour_mode = {
                 'name': 'colour',
                 'profile_state': {},
                 'lights': {
@@ -65,9 +66,9 @@ class HueWrapper(object):
                 }
             }
             profiles = [
-                bright_white_mode,
-                normal_mode,
-                colour_mode,
+                self.bright_white_mode,
+                self.normal_mode,
+                self.colour_mode,
             ]
 
         self.light_configs = light_configs
@@ -184,7 +185,28 @@ class HueWrapper(object):
     def next_profile(self):
         self.profile = next(self.profiles)
 
-    def do_whatever(self, bright=None):
+    def do_whatever(self):
+        now = datetime.datetime.now()
+        weekday = now.weekday()
+        hour = now.hour
+
+        monday = 0
+        friday = 4
+        saturday = 5
+        sunday = 6
+        in_work_hours = monday <= weekday <= friday and 8 <= hour <= 14
+        is_weekend = saturday <= weekday <= sunday
+
+        if in_work_hours:
+            bright = 254
+            self.profile = self.bright_white_mode
+        else:
+            bright = 1
+            if is_weekend:
+                self.profile = self.colour_mode
+            else:
+                self.profile = self.normal_mode
+
         if self.is_on:
             for light in self.lights:
                 light_profile = self.profile['lights'][light.name]

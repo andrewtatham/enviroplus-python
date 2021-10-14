@@ -47,18 +47,6 @@ class MuteFilter(object):
         return False
 
 
-def get_target_lux():
-    now = datetime.datetime.now(tz)
-    if now.hour <= 6:
-        return 1
-    elif now.hour <= 17:
-        return 400
-    elif now.hour <= 20:
-        return 25
-    else:
-        return 1
-
-
 class MyScheduler:
     def __init__(self):
         self._scheduler = BlockingScheduler()
@@ -104,20 +92,8 @@ class MyScheduler:
         job()
 
     def _manage_lights(self):
-        actual_lux = self._enviro.get_lux()
-        logging.info('light: {}'.format(actual_lux))
         if self._hue.is_on:
-            target_lux = get_target_lux()
-            lux_delta = target_lux - actual_lux
-            lux_delta = max(-128, min(lux_delta, 128))
-            self._bright = self._bright + lux_delta
-            self._bright = max(0, min(self._bright, 254))
-            logging.info('target: {} actual: {} delta: {} brightness: {}'.format(
-                target_lux, actual_lux, lux_delta, self._bright))
-            # if self._bright == 0 and lux_delta < 0:
-            #     self._hue.off()
-            # else:
-            self._hue.do_whatever(bright=self._bright)
+            self._hue.do_whatever()
 
     def _manage_heater(self):
         now = datetime.datetime.now()
@@ -125,12 +101,18 @@ class MyScheduler:
         hour = now.hour
         month = now.month
 
-        in_work_hours = 0 <= weekday <= 4 and 8 <= hour <= 14
+        monday = 0
+        friday = 4
+        in_work_hours = monday <= weekday <= friday and 8 <= hour <= 14
         # in_work_hours = False
 
-        is_winter = month <= 3 or month >= 10
-        is_early_morning = 0 <= hour <= 8
+        is_spring = 3 <= month <= 5
+        is_summer = 6 <= month <= 8
+        is_autumn = 9 <= month <= 11
+        is_winter = month == 12 or month <= 2
+
         is_morning = 0 <= hour <= 12
+        is_early_morning = 0 <= hour <= 8
 
         logging.info('weekday: {} hour: {} in_work_hours: {}'.format(weekday, hour, in_work_hours))
 
@@ -140,10 +122,10 @@ class MyScheduler:
         target_temperature = 15.0
         if is_winter:
             target_temperature += 1
-        if is_early_morning:
-            target_temperature += 1
-        if is_morning:
-            target_temperature += 1
+            if is_early_morning:
+                target_temperature += 1
+            if is_morning:
+                target_temperature += 1
 
         switch_off = temperature > target_temperature
         switch_on = temperature < target_temperature - 1 and in_work_hours
