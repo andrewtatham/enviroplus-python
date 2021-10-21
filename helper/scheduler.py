@@ -103,8 +103,8 @@ class MyScheduler:
 
         monday = 0
         friday = 4
-        in_work_hours = monday <= weekday <= friday and 8 <= hour <= 14
-        # in_work_hours = False
+        on_holiday = True
+        in_work_hours = not on_holiday and monday <= weekday <= friday and 8 <= hour <= 16
 
         is_spring = 3 <= month <= 5
         is_summer = 6 <= month <= 8
@@ -124,7 +124,7 @@ class MyScheduler:
         elif is_summer:
             target_temperature = 10.0
         elif is_autumn:
-            target_temperature = 12.0
+            target_temperature = 13.0
         elif is_winter:
             target_temperature = 16.0
 
