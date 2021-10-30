@@ -103,7 +103,7 @@ class MyScheduler:
 
         monday = 0
         friday = 4
-        on_holiday = True
+        on_holiday = False
         in_work_hours = not on_holiday and monday <= weekday <= friday and 8 <= hour <= 16
 
         is_spring = 3 <= month <= 5
