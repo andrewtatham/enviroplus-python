@@ -99,12 +99,16 @@ class MyScheduler:
         now = datetime.datetime.now()
         weekday = now.weekday()
         hour = now.hour
+        mins = now.minute
         month = now.month
 
         monday = 0
         friday = 4
         on_holiday = False
-        in_work_hours = not on_holiday and monday <= weekday <= friday and 8 <= hour <= 16
+        in_work_hours = not on_holiday \
+                        and monday <= weekday <= friday \
+                        and 8 <= hour <= 16 \
+                        and (hour != 16 or mins <= 30)
 
         is_spring = 3 <= month <= 5
         is_summer = 6 <= month <= 8
