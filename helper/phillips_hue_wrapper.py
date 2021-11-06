@@ -241,7 +241,8 @@ class HueWrapper(object):
 
     def _colour_func(self, light, **kwargs):
         # hue' parameter has the range 0-65535 so represents approximately 182*degrees
-        hue = int(colour_helper.day_factor * 65535)
+        minute = datetime.datetime.now().minute
+        hue = int(minute/59 * 65535)
         sat = 254
         if "bright" in kwargs and kwargs["bright"]:
             brightness = kwargs["bright"]
