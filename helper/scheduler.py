@@ -115,8 +115,8 @@ class MyScheduler:
         is_autumn = 9 <= month <= 11
         is_winter = month == 12 or month <= 2
 
-        is_morning = 0 <= hour <= 12
-        is_early_morning = 0 <= hour <= 8
+        # is_morning = 0 <= hour <= 12
+        # is_early_morning = 0 <= hour <= 8
 
         logging.info('weekday: {} hour: {} in_work_hours: {}'.format(weekday, hour, in_work_hours))
 
@@ -130,13 +130,13 @@ class MyScheduler:
         elif is_autumn:
             target_temperature = 17.0
         elif is_winter:
-            target_temperature = 18.0
+            target_temperature = 19.0
 
-        if is_winter:
-            if is_early_morning:
-                target_temperature += 1
-            if is_morning:
-                target_temperature += 1
+        # if is_winter:
+        #     if is_early_morning:
+        #         target_temperature += 1
+        #     if is_morning:
+        #         target_temperature += 1
 
         switch_off = temperature > target_temperature
         switch_on = temperature < target_temperature - 1 and in_work_hours
