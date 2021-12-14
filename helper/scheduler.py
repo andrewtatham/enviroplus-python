@@ -162,9 +162,8 @@ class MyScheduler:
             switch_on = False
             switch_off = True
 
-        logging.info('heater_on_for: {0}', self.heater_on_for)
-        logging.info('heater_off_for: {0}', self.heater_off_for)
-
+        logging.info('heater_on_for: {0}'.format(self.heater_on_for))
+        logging.info('heater_off_for: {0}'.format(self.heater_off_for))
 
         if switch_on:
             logging.info('Switching heater on')
