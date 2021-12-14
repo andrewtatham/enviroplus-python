@@ -149,8 +149,6 @@ class MyScheduler:
 
         if warmer_plz:
             logging.info('warmer_plz')
-            logging.info('heater_on_for: {0}', self.heater_on_for)
-            logging.info('heater_off_for: {0}', self.heater_off_for)
             if self.heater_on_for < 10 or self.heater_off_for > 5:
                 logging.info('Duty cycle on')
                 switch_on = True
@@ -163,6 +161,10 @@ class MyScheduler:
             logging.info('cooler_thx')
             switch_on = False
             switch_off = True
+
+        logging.info('heater_on_for: {0}', self.heater_on_for)
+        logging.info('heater_off_for: {0}', self.heater_off_for)
+
 
         if switch_on:
             logging.info('Switching heater on')
