@@ -61,6 +61,9 @@ class MyScheduler:
         ]
         self._jobs_cycle = itertools.cycle(self._jobs_list)
 
+        self.heater_on_for = 0
+        self.heater_off_for = 0
+
     def _init(self):
         logging.basicConfig(level=logging.INFO)
         logging.getLogger("apscheduler.scheduler").addFilter(MuteFilter())
@@ -138,15 +141,36 @@ class MyScheduler:
         #     if is_morning:
         #         target_temperature += 1
 
-        switch_off = temperature > target_temperature
-        switch_on = temperature < target_temperature - 1 and in_work_hours
+        cooler_thx = temperature > target_temperature
+        warmer_plz = temperature < target_temperature - 1 and in_work_hours
+
+        if warmer_plz:
+            logging.info('warmer_plz')
+            logging.info('heater_on_for: {0}', self.heater_on_for)
+            logging.info('heater_off_for: {0}', self.heater_off_for)
+            if self.heater_on_for < 10 or self.heater_off_for > 5:
+                logging.info('Duty cycle on')
+                switch_on = True
+                switch_off = False
+            else:
+                logging.info('Duty cycle off')
+                switch_on = False
+                switch_off = True
+        elif cooler_thx:
+            logging.info('cooler_thx')
+            switch_on = False
+            switch_off = True
 
         if switch_on:
             logging.info('Switching heater on')
             self._kasa.switch_on()
+            self.heater_on_for += 1
+            self.heater_off_for = 0
         elif switch_off:
             logging.info('Switching heater off')
             self._kasa.switch_off()
+            self.heater_on_for = 0
+            self.heater_off_for += 1
 
     def _get_sunset_sunrise(self):
         a = Astral()
