@@ -144,6 +144,9 @@ class MyScheduler:
         cooler_thx = temperature > target_temperature
         warmer_plz = temperature < target_temperature - 1 and in_work_hours
 
+        switch_on = False
+        switch_off = False
+
         if warmer_plz:
             logging.info('warmer_plz')
             logging.info('heater_on_for: {0}', self.heater_on_for)
