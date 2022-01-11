@@ -142,7 +142,7 @@ class MyScheduler:
         #         target_temperature += 1
 
         cooler_thx = temperature > target_temperature
-        warmer_plz = temperature < target_temperature - 1 and in_work_hours
+        warmer_plz = temperature < target_temperature - 3 and in_work_hours
 
         switch_on = False
         switch_off = False
