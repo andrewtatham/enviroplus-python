@@ -64,6 +64,9 @@ class MyScheduler:
         self.heater_on_for = 0
         self.heater_off_for = 0
 
+        self.switch_on = False
+        self.switch_off = False
+
     def _init(self):
         logging.basicConfig(level=logging.INFO)
         logging.getLogger("apscheduler.scheduler").addFilter(MuteFilter())
@@ -118,7 +121,7 @@ class MyScheduler:
         is_autumn = 9 <= month <= 11
         is_winter = month == 12 or month <= 2
 
-        # is_morning = 0 <= hour <= 12
+        is_morning = 0 <= hour <= 12
         # is_early_morning = 0 <= hour <= 8
 
         logging.info('weekday: {} hour: {} in_work_hours: {}'.format(weekday, hour, in_work_hours))
@@ -133,48 +136,48 @@ class MyScheduler:
         elif is_autumn:
             target_temperature = 17.0
         elif is_winter:
-            target_temperature = 18.0
+            target_temperature = 17.0
 
-        # if is_winter:
-        #     if is_early_morning:
-        #         target_temperature += 1
-        #     if is_morning:
-        #         target_temperature += 1
+        if is_winter:
+            # if is_early_morning:
+            #     target_temperature += 1
+            if is_morning:
+                target_temperature += 1
 
         cooler_thx = temperature > target_temperature
         warmer_plz = temperature < target_temperature - 3 and in_work_hours
 
-        switch_on = False
-        switch_off = False
-
         if warmer_plz:
             logging.info('warmer_plz')
-            if self.heater_on_for > 5:
+            if self.heater_on_for >= 5:
                 logging.info('Duty cycle off')
-                switch_on = False
-                switch_off = True
-            elif self.heater_off_for > 2:
+                self.switch_on = False
+                self.switch_off = True
+            elif self.heater_off_for >= 2:
                 logging.info('Duty cycle on')
-                switch_on = True
-                switch_off = False
+                self.switch_on = True
+                self.switch_off = False
             else:
                 logging.info('on')
-                switch_on = True
-                switch_off = False
+                self.switch_on = True
+                self.switch_off = False
         elif cooler_thx:
             logging.info('cooler_thx')
-            switch_on = False
-            switch_off = True
+            self.switch_on = False
+            self.switch_off = True
 
         logging.info('heater_on_for: {0}'.format(self.heater_on_for))
         logging.info('heater_off_for: {0}'.format(self.heater_off_for))
 
-        if switch_on:
+        logging.info('switch_on: {0}'.format(self.switch_on))
+        logging.info('switch_off: {0}'.format(self.switch_off))
+
+        if self.switch_on:
             logging.info('Switching heater on')
             self._kasa.switch_on()
             self.heater_on_for += 1
             self.heater_off_for = 0
-        elif switch_off:
+        elif self.switch_off:
             logging.info('Switching heater off')
             self._kasa.switch_off()
             self.heater_on_for = 0
