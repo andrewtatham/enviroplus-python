@@ -149,16 +149,12 @@ class MyScheduler:
 
         if warmer_plz:
             logging.info('warmer_plz')
-            if self.heater_on_for >= 5:
+            if self.heater_on_for > 5 or self.heater_off_for < 2:
                 logging.info('Duty cycle off')
                 self.switch_on = False
                 self.switch_off = True
-            elif self.heater_off_for >= 2:
-                logging.info('Duty cycle on')
-                self.switch_on = True
-                self.switch_off = False
             else:
-                logging.info('on')
+                logging.info('Duty cycle on')
                 self.switch_on = True
                 self.switch_off = False
         elif cooler_thx:
