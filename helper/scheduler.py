@@ -65,7 +65,6 @@ class MyScheduler:
         self.heater_off_for = 0
 
         self.switch_on = False
-        self.switch_off = False
 
     def _init(self):
         logging.basicConfig(level=logging.INFO)
@@ -137,6 +136,8 @@ class MyScheduler:
             target_temperature = 17.0
         elif is_winter:
             target_temperature = 17.0
+        else:
+            target_temperature = 17.0
 
         if is_winter:
             # if is_early_morning:
@@ -152,28 +153,24 @@ class MyScheduler:
             if self.heater_on_for > 5:
                 logging.info('Duty cycle off')
                 self.switch_on = False
-                self.switch_off = True
             elif self.heater_off_for > 2:
                 logging.info('Duty cycle on')
                 self.switch_on = True
-                self.switch_off = False
         elif cooler_thx:
             logging.info('cooler_thx')
             self.switch_on = False
-            self.switch_off = True
 
         logging.info('heater_on_for: {0}'.format(self.heater_on_for))
         logging.info('heater_off_for: {0}'.format(self.heater_off_for))
 
         logging.info('switch_on: {0}'.format(self.switch_on))
-        logging.info('switch_off: {0}'.format(self.switch_off))
 
         if self.switch_on:
             logging.info('Switching heater on')
             self._kasa.switch_on()
             self.heater_on_for += 1
             self.heater_off_for = 0
-        elif self.switch_off:
+        else:
             logging.info('Switching heater off')
             self._kasa.switch_off()
             self.heater_on_for = 0
