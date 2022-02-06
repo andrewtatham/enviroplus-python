@@ -13,6 +13,12 @@ class KasaWrapper:
         for dev in devices:
             logging.info(dev.alias)
 
+    def is_on(self):
+        heater = self.get_device('Heater')
+        if heater:
+            return heater.is_on
+        return False
+
     def switch_off(self):
         heater = self.get_device('Heater')
         if heater:

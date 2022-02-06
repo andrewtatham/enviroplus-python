@@ -148,6 +148,9 @@ class MyScheduler:
         cooler_thx = temperature > target_temperature or self.heater_on_for > 5
         warmer_plz = in_work_hours and temperature < target_temperature - 2
 
+        is_on = self._kasa.is_on()
+        logging.info('is_on: {0}'.format(is_on))
+
         if warmer_plz:
             logging.info('warmer_plz')
             if self.heater_off_for > 1:
