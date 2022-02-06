@@ -145,13 +145,10 @@ class MyScheduler:
             if is_morning:
                 target_temperature += 1
 
-        cooler_thx = temperature > target_temperature
-        warmer_plz = temperature < target_temperature - 2 and in_work_hours
+        cooler_thx = temperature > target_temperature or self.heater_on_for > 5
+        warmer_plz = in_work_hours and temperature < target_temperature - 2
 
-        if self.heater_on_for > 5:
-            logging.info('Duty cycle off')
-            self.switch_on = False
-        elif warmer_plz:
+        if warmer_plz:
             logging.info('warmer_plz')
             if self.heater_off_for > 1:
                 logging.info('Duty cycle on')
@@ -170,7 +167,7 @@ class MyScheduler:
             self._kasa.switch_on()
             self.heater_on_for += 1
             self.heater_off_for = 0
-        else:
+        elif cooler_thx:
             logging.info('Switching heater off')
             self._kasa.switch_off()
             self.heater_on_for = 0
