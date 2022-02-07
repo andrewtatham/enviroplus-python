@@ -145,36 +145,38 @@ class MyScheduler:
             if is_morning:
                 target_temperature += 1
 
+        is_on = self._kasa.is_on()
+        logging.info('is_on: {0}'.format(is_on))
+        if is_on:
+            self.heater_on_for += 1
+            self.heater_off_for = 0
+        else:
+            self.heater_on_for = 0
+            self.heater_off_for += 1
+
+        logging.info('heater_on_for: {0}'.format(self.heater_on_for))
+        logging.info('heater_off_for: {0}'.format(self.heater_off_for))
+
         cooler_thx = temperature > target_temperature or self.heater_on_for > 5
         warmer_plz = in_work_hours and temperature < target_temperature - 2
 
-        is_on = self._kasa.is_on()
-        logging.info('is_on: {0}'.format(is_on))
-
-        if warmer_plz:
+        if cooler_thx:
+            logging.info('cooler_thx')
+            self.switch_on = False
+        elif warmer_plz:
             logging.info('warmer_plz')
             if self.heater_off_for > 1:
                 logging.info('Duty cycle on')
                 self.switch_on = True
-        elif cooler_thx:
-            logging.info('cooler_thx')
-            self.switch_on = False
-
-        logging.info('heater_on_for: {0}'.format(self.heater_on_for))
-        logging.info('heater_off_for: {0}'.format(self.heater_off_for))
 
         logging.info('switch_on: {0}'.format(self.switch_on))
 
         if self.switch_on:
             logging.info('Switching heater on')
             self._kasa.switch_on()
-            self.heater_on_for += 1
-            self.heater_off_for = 0
         elif cooler_thx:
             logging.info('Switching heater off')
             self._kasa.switch_off()
-            self.heater_on_for = 0
-            self.heater_off_for += 1
 
     def _get_sunset_sunrise(self):
         a = Astral()
