@@ -129,15 +129,15 @@ class MyScheduler:
         logging.info('temperature: {}'.format(temperature))
 
         if is_spring:
-            target_temperature = 17.0
+            target_temperature = 18.0
         elif is_summer:
             target_temperature = 10.0
         elif is_autumn:
-            target_temperature = 17.0
+            target_temperature = 18.0
         elif is_winter:
-            target_temperature = 17.0
+            target_temperature = 18.0
         else:
-            target_temperature = 17.0
+            target_temperature = 18.0
 
         if is_winter:
             # if is_early_morning:
