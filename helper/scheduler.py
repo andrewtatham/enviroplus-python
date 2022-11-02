@@ -112,7 +112,7 @@ class MyScheduler:
         on_holiday = False
         in_work_hours = not on_holiday \
                         and monday <= weekday <= friday \
-                        and 8 <= hour <= 16 \
+                        and 9 <= hour <= 16 \
                         and (hour != 16 or mins <= 30)
 
         is_spring = 3 <= month <= 5
