@@ -121,7 +121,7 @@ class MyScheduler:
         is_winter = month == 12 or month <= 2
 
         is_morning = 0 <= hour <= 12
-        # is_early_morning = 0 <= hour <= 8
+        is_early_morning = 0 <= hour <= 10
 
         logging.info('weekday: {} hour: {} in_work_hours: {}'.format(weekday, hour, in_work_hours))
 
@@ -140,8 +140,8 @@ class MyScheduler:
             target_temperature = 18.0
 
         if is_winter:
-            # if is_early_morning:
-            #     target_temperature += 1
+            if is_early_morning:
+                target_temperature += 1
             if is_morning:
                 target_temperature += 1
 
@@ -157,7 +157,7 @@ class MyScheduler:
         logging.info('heater_on_for: {0}'.format(self.heater_on_for))
         logging.info('heater_off_for: {0}'.format(self.heater_off_for))
 
-        cooler_thx = temperature > target_temperature or self.heater_on_for > 5
+        cooler_thx = temperature > target_temperature or self.heater_on_for > 7
         warmer_plz = in_work_hours and temperature < target_temperature - 2
 
         if cooler_thx:
