@@ -158,7 +158,7 @@ class MyScheduler:
         logging.info('heater_on_for: {0}'.format(self.heater_on_for))
         logging.info('heater_off_for: {0}'.format(self.heater_off_for))
 
-        cooler_thx = temperature > target_temperature or self.heater_on_for > 7
+        cooler_thx = temperature > target_temperature or self.heater_on_for > 10
         warmer_plz = in_work_hours and temperature < target_temperature - 2
 
         if cooler_thx:
