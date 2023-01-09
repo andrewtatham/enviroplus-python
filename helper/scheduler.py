@@ -108,10 +108,12 @@ class MyScheduler:
         month = now.month
 
         monday = 0
+        wednesday = 2
         friday = 4
         on_holiday = False
         in_work_hours = not on_holiday \
                         and monday <= weekday <= friday \
+                        and weekday != wednesday \
                         and 8 <= hour <= 16 \
                         and (hour != 8 or mins >= 30) \
                         and (hour != 16 or mins <= 30)
