@@ -134,7 +134,7 @@ class MyScheduler:
         elif is_summer:
             target_temperature = 10.0
         elif is_autumn:
-            target_temperature = 16.0
+            target_temperature = 17.0
         elif is_winter:
             target_temperature = 18.0
         else:
