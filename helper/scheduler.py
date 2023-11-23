@@ -111,7 +111,7 @@ class MyScheduler:
         wednesday = 2
         friday = 4
         on_holiday = False
-        early_finish_wed = weekday = wednesday and hour >= 15
+        early_finish_wed = weekday == wednesday and hour >= 15
 
         in_work_hours = not on_holiday \
                         and monday <= weekday <= friday \
