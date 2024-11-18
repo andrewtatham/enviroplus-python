@@ -122,8 +122,8 @@ class MyScheduler:
 
         is_spring = 3 <= month <= 5
         is_summer = 6 <= month <= 8
-        is_autumn = 9 <= month <= 11
-        is_winter = month == 12 or month <= 2
+        is_autumn = 9 <= month <= 10
+        is_winter = month <= 11 or month <= 2
 
         is_morning = 0 <= hour <= 12
         is_early_morning = 0 <= hour <= 10
