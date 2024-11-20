@@ -113,17 +113,20 @@ class MyScheduler:
         on_holiday = False
         # early_finish_wed = weekday == wednesday and hour >= 15
 
-        in_work_hours = not on_holiday \
-                        and monday <= weekday <= friday \
-                        and 8 <= hour <= 16 \
-                        and (hour != 8 or mins >= 30) \
-                        and (hour != 16 or mins <= 30) \
-                        # and not early_finish_wed
-
         is_spring = 3 <= month <= 5
         is_summer = 6 <= month <= 8
         is_autumn = 9 <= month <= 10
         is_winter = month <= 11 or month <= 2
+
+        # Mon to Fri 8:30 to 4:30
+        # in winter 8:00
+
+        in_work_hours = not on_holiday \
+                        and monday <= weekday <= friday \
+                        and 8 <= hour <= 16 \
+                        and (not is_winter or hour != 8 or mins >= 30) \
+                        and (hour != 16 or mins <= 30) \
+                        # and not early_finish_wed
 
         is_morning = 0 <= hour <= 12
         is_early_morning = 0 <= hour <= 10
