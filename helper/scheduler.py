@@ -111,12 +111,21 @@ class MyScheduler:
         wednesday = 2
         friday = 4
         on_holiday = False
-        # early_finish_wed = weekday == wednesday and hour >= 15
+
+        logging.info('month: {}'.format(month))
+        logging.info('weekday: {}'.format(weekday))
+        logging.info('hour: {}'.format(hour))
+        logging.info('mins: {}'.format(mins))
 
         is_spring = 3 <= month <= 5
         is_summer = 6 <= month <= 8
         is_autumn = 9 <= month <= 10
-        is_winter = month <= 11 or month <= 2
+        is_winter = month >= 11 or month <= 2
+
+        logging.info('is_spring: {}'.format(is_spring))
+        logging.info('is_summer: {}'.format(is_summer))
+        logging.info('is_autumn: {}'.format(is_autumn))
+        logging.info('is_winter: {}'.format(is_winter))
 
         # Mon to Fri 8:30 to 4:30
         # in winter 8:00
@@ -126,7 +135,7 @@ class MyScheduler:
                         and 8 <= hour <= 16 \
                         and (not is_winter or hour != 8 or mins >= 30) \
                         and (hour != 16 or mins <= 30) \
-                        # and not early_finish_wed
+            # and not early_finish_wed
 
         is_morning = 0 <= hour <= 12
         is_early_morning = 0 <= hour <= 10
