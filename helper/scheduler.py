@@ -107,15 +107,20 @@ class MyScheduler:
         mins = now.minute
         month = now.month
 
-        monday = 0
-        wednesday = 2
-        friday = 4
-        on_holiday = False
-
         logging.info('month: {}'.format(month))
         logging.info('weekday: {}'.format(weekday))
         logging.info('hour: {}'.format(hour))
         logging.info('mins: {}'.format(mins))
+
+        monday = 0
+        wednesday = 2
+        friday = 4
+
+        holiday_from = datetime.datetime(year=2024, month=12, day=20)
+        holiday_to = datetime.datetime(year=2025, month=1, day=6)
+        on_holiday = holiday_from > now > holiday_to
+        logging.info('on_holiday: {}'.format(on_holiday))
+
 
         is_spring = 3 <= month <= 5
         is_summer = 6 <= month <= 8
