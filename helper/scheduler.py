@@ -34,6 +34,10 @@ every_minute = CronTrigger(minute="*")
 every_thirty_seconds = CronTrigger(second="*/30")
 every_fifteen_seconds = CronTrigger(second="*/15")
 
+heater_trigger = every_minute
+lights_trigger = every_minute
+
+
 tz = pytz.timezone("Europe/London")
 is_linux = platform.platform().startswith('Linux')
 
@@ -55,11 +59,6 @@ class MyScheduler:
         self._kasa = KasaWrapper()
         self._bright = 0
         self._init()
-        self._jobs_list = [
-            self._manage_heater,
-            self._manage_lights,
-        ]
-        self._jobs_cycle = itertools.cycle(self._jobs_list)
 
         self.heater_on_for = 0
         self.heater_off_for = 0
@@ -75,8 +74,10 @@ class MyScheduler:
         self._scheduler.add_job(func=self._get_sunset_sunrise, trigger=at_midnight)
         self._scheduler.add_job(func=self._get_sunset_sunrise)
 
-        self._scheduler.add_job(self._manage_next, trigger=every_thirty_seconds)
-        self._scheduler.add_job(self._manage_all)
+        self._scheduler.add_job(self._manage_heater)
+        self._scheduler.add_job(self._manage_lights)
+        self._scheduler.add_job(self._manage_heater, trigger=heater_trigger)
+        self._scheduler.add_job(self._manage_lights, trigger=lights_trigger)
 
     def start(self):
         self._scheduler.print_jobs()
@@ -86,15 +87,6 @@ class MyScheduler:
         self._scheduler.shutdown()
         # if self._hue:
         #     self._hue.off()
-
-    def _manage_all(self):
-        for job in self._jobs_list:
-            job()
-            time.sleep(5)
-
-    def _manage_next(self):
-        job = next(self._jobs_cycle)
-        job()
 
     def _manage_lights(self):
         if self._hue.is_on:
