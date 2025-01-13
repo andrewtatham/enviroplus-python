@@ -10,7 +10,7 @@ from helper import colour_helper
 
 
 class HueWrapper(object):
-    def __init__(self, bridge_ip='192.168.1.228', username="kDzpGE-UoWwZ6c0pmVmNH1KJCYAUYqgrpeEdbGC4", light_configs=None, profiles=None):
+    def __init__(self, bridge_ip='0017884e90fb.local', username="kDzpGE-UoWwZ6c0pmVmNH1KJCYAUYqgrpeEdbGC4", light_configs=None, profiles=None):
         if not light_configs:
             light_configs = [
                 {'name': 'Hue color spot 1', 'is_colour': True},
