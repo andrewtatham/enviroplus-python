@@ -61,7 +61,7 @@ class EnviroWrapper:
 
         # Tuning factor for compensation. Decrease this number to adjust the
         # displayed temperature down, and increase to adjust up
-        self.factor = 4
+        self.factor = 1.35
 
         # Create a values dict to store the data
         self.variables = ["temperature",
@@ -112,7 +112,7 @@ class EnviroWrapper:
         cpu_temps = self.cpu_temps[1:] + [cpu_temp]
         avg_cpu_temp = sum(cpu_temps) / float(len(cpu_temps))
         raw_temp = self.bme280.get_temperature()
-        cpu_adjustment = - ((avg_cpu_temp - raw_temp) / self.factor)
+        cpu_adjustment = raw_temp - (avg_cpu_temp / self.factor)
         data = raw_temp + cpu_adjustment
         self.display_text("temperature", data, unit)
         message = "raw: {: .1f} cpu: {: .1f} adjustment: {: .1f} calc: {: .1f} ".format(raw_temp,
