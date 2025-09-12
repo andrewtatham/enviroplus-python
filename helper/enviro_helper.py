@@ -61,7 +61,7 @@ class EnviroWrapper:
 
         # Tuning factor for compensation. Decrease this number to adjust the
         # displayed temperature down, and increase to adjust up
-        self.factor = 1.2
+        self.factor = 4
 
         # Create a values dict to store the data
         self.variables = ["temperature",
