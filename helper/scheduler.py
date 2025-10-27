@@ -37,7 +37,6 @@ every_fifteen_seconds = CronTrigger(second="*/15")
 heater_trigger = every_minute
 lights_trigger = every_minute
 
-
 tz = pytz.timezone("Europe/London")
 is_linux = platform.platform().startswith('Linux')
 
@@ -113,7 +112,6 @@ class MyScheduler:
         on_holiday = holiday_from < now < holiday_to
         logging.info('on_holiday: {}'.format(on_holiday))
 
-
         is_spring = 3 <= month <= 5
         is_summer = 6 <= month <= 8
         is_autumn = 9 <= month <= 10
@@ -137,27 +135,33 @@ class MyScheduler:
         is_morning = 0 <= hour <= 12
         is_early_morning = 0 <= hour <= 10
 
-        logging.info('weekday: {} hour: {} in_work_hours: {}'.format(weekday, hour, in_work_hours))
+        logging.info('weekday: {} hour: {}'.format(weekday, hour))
+        logging.info('in_work_hours: {}'.format(in_work_hours))
 
         temperature = self._enviro.get_temperature()
         logging.info('temperature: {}'.format(temperature))
 
         if is_spring:
-            target_temperature = 18.0
+            on_below = 18.0
         elif is_summer:
-            target_temperature = 10.0
+            on_below = 10.0
         elif is_autumn:
-            target_temperature = 19.0
+            on_below = 17.0
         elif is_winter:
-            target_temperature = 20.0
+            on_below = 18.0
         else:
-            target_temperature = 10.0
+            on_below = 10.0
+
+        off_above = 22.0
 
         if is_winter:
             if is_early_morning:
-                target_temperature += 1
+                on_below -= 1
             if is_morning:
-                target_temperature += 1
+                on_below -= 1
+
+        logging.info('on_below: {}'.format(on_below))
+        logging.info('off_above: {}'.format(off_above))
 
         is_on = self._kasa.is_on()
         logging.info('is_on: {0}'.format(is_on))
@@ -171,8 +175,8 @@ class MyScheduler:
         logging.info('heater_on_for: {0}'.format(self.heater_on_for))
         logging.info('heater_off_for: {0}'.format(self.heater_off_for))
 
-        cooler_thx = temperature > target_temperature or (in_work_hours and self.heater_on_for > 10)
-        warmer_plz = in_work_hours and temperature < target_temperature - 1
+        cooler_thx = temperature > off_above or (in_work_hours and self.heater_on_for > 10)
+        warmer_plz = in_work_hours and temperature < on_below
 
         if cooler_thx:
             logging.info('cooler_thx')
