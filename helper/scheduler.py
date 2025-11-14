@@ -143,16 +143,20 @@ class MyScheduler:
 
         if is_spring:
             on_below = 18.0
+            off_above = 20.0
         elif is_summer:
             on_below = 10.0
+            off_above = 15.0
         elif is_autumn:
             on_below = 17.0
+            off_above = 20.0
         elif is_winter:
-            on_below = 18.0
+            on_below = 20.0
+            off_above = 22.0
         else:
             on_below = 10.0
+            off_above = 15.0
 
-        off_above = 22.0
 
         if is_winter:
             if is_early_morning:
