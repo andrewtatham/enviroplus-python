@@ -160,9 +160,9 @@ class MyScheduler:
 
         if is_winter:
             if is_early_morning:
-                on_below -= 1
+                off_above += 1
             if is_morning:
-                on_below -= 1
+                off_above += 1
 
         logging.info('on_below: {}'.format(on_below))
         logging.info('off_above: {}'.format(off_above))
