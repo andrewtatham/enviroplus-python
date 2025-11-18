@@ -122,15 +122,15 @@ class MyScheduler:
         logging.info('is_autumn: {}'.format(is_autumn))
         logging.info('is_winter: {}'.format(is_winter))
 
-        # Mon to Fri 8:30 to 4:30
+        # Mon to Fri 8:30 to 16:50
         # in winter 8:00
 
         in_work_hours = not on_holiday \
                         and monday <= weekday <= friday \
                         and 8 <= hour <= 16 \
-                        # and (not is_winter or hour != 8 or mins >= 30) \
-                        and (hour != 16 or mins <= 30) \
-            # and not early_finish_wed
+                        and (hour != 16 or mins <= 50) \
+                        and (not is_winter or hour != 8 or mins >= 30)
+        # and not early_finish_wed
 
         is_morning = 0 <= hour <= 12
         is_early_morning = 0 <= hour <= 10
