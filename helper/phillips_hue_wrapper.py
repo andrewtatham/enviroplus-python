@@ -197,11 +197,12 @@ class HueWrapper(object):
         sunday = 6
 
         is_daytime = 8 <= hour <= 18
+        is_evening = 19 <= hour <= 23
 
         in_work_hours = monday <= weekday <= friday and is_daytime
         is_weekend = saturday <= weekday <= sunday
 
-        if in_work_hours:
+        if in_work_hours or is_evening:
             self.profile = self.bright_white_mode
         else:
             if is_weekend:
