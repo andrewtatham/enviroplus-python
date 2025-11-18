@@ -10,7 +10,8 @@ from helper import colour_helper
 
 
 class HueWrapper(object):
-    def __init__(self, bridge_ip='0017884e90fb.local', username="kDzpGE-UoWwZ6c0pmVmNH1KJCYAUYqgrpeEdbGC4", light_configs=None, profiles=None):
+    def __init__(self, bridge_ip='0017884e90fb.local', username="kDzpGE-UoWwZ6c0pmVmNH1KJCYAUYqgrpeEdbGC4",
+                 light_configs=None, profiles=None):
         if not light_configs:
             light_configs = [
                 {'name': 'Hue color spot 1', 'is_colour': True},
@@ -235,7 +236,7 @@ class HueWrapper(object):
             brightness = kwargs["bright"]
         else:
             # // brightness between 0-254 (NB 0 is not off!)
-            brightness = int(colour_helper.day_factor * 254)
+            brightness = int(127 + colour_helper.day_factor * 127)
 
         light.colortemp = ct
         light.brightness = brightness
@@ -244,7 +245,7 @@ class HueWrapper(object):
     def _colour_func(self, light, **kwargs):
         # hue' parameter has the range 0-65535 so represents approximately 182*degrees
         minute = datetime.datetime.now().minute
-        hue = int(minute/59 * 65535)
+        hue = int(minute / 59 * 65535)
         sat = 254
         if "bright" in kwargs and kwargs["bright"]:
             brightness = kwargs["bright"]
