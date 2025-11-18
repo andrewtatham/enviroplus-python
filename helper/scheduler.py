@@ -128,7 +128,7 @@ class MyScheduler:
         in_work_hours = not on_holiday \
                         and monday <= weekday <= friday \
                         and 8 <= hour <= 16 \
-                        and (not is_winter or hour != 8 or mins >= 30) \
+                        # and (not is_winter or hour != 8 or mins >= 30) \
                         and (hour != 16 or mins <= 30) \
             # and not early_finish_wed
 
@@ -156,7 +156,6 @@ class MyScheduler:
         else:
             on_below = 10.0
             off_above = 15.0
-
 
         if is_winter:
             if is_early_morning:
