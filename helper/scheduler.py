@@ -107,8 +107,8 @@ class MyScheduler:
         wednesday = 2
         friday = 4
 
-        holiday_from = datetime.datetime(year=2024, month=12, day=20)
-        holiday_to = datetime.datetime(year=2025, month=1, day=6)
+        holiday_from = datetime.datetime(year=2025, month=12, day=19, hour=17, minute=00)
+        holiday_to = datetime.datetime(year=2026, month=1, day=5, hour=8, minute=00)
         on_holiday = holiday_from < now < holiday_to
         logging.info('on_holiday: {}'.format(on_holiday))
 
