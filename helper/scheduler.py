@@ -104,8 +104,12 @@ class MyScheduler:
         logging.info('mins: {}'.format(mins))
 
         monday = 0
+        tuesday = 1
         wednesday = 2
+        thursday = 3
         friday = 4
+
+        is_monday_or_tuesday = weekday == monday or weekday == tuesday
 
         holiday_from = datetime.datetime(year=2025, month=12, day=19, hour=17, minute=00)
         holiday_to = datetime.datetime(year=2026, month=1, day=5, hour=8, minute=00)
@@ -122,14 +126,13 @@ class MyScheduler:
         logging.info('is_autumn: {}'.format(is_autumn))
         logging.info('is_winter: {}'.format(is_winter))
 
-        # Mon to Fri 8:30 to 16:50
-        # in winter 8:00
+        # Mon to Fri 8:00 to 16:45
+        # in mon/tue 7:00
 
         in_work_hours = not on_holiday \
                         and monday <= weekday <= friday \
-                        and 8 <= hour <= 16 \
-                        and (hour != 16 or mins <= 50)
-        # and not early_finish_wed
+                        and (8 <= hour or is_monday_or_tuesday and hour == 7) \
+                        and (hour < 16 or hour == 16 and mins <= 45)
 
         is_morning = 0 <= hour <= 12
         is_early_morning = 0 <= hour <= 10
@@ -139,6 +142,10 @@ class MyScheduler:
 
         temperature = self._enviro.get_temperature()
         logging.info('temperature: {}'.format(temperature))
+
+        duty_cycle = 10
+        if is_spring:
+            duty_cycle = 20
 
         if is_spring:
             on_below = 18.0
@@ -177,7 +184,7 @@ class MyScheduler:
         logging.info('heater_on_for: {0}'.format(self.heater_on_for))
         logging.info('heater_off_for: {0}'.format(self.heater_off_for))
 
-        cooler_thx = temperature > off_above or (in_work_hours and self.heater_on_for > 10)
+        cooler_thx = temperature > off_above or (in_work_hours and self.heater_on_for > duty_cycle)
         warmer_plz = in_work_hours and temperature < on_below
 
         if cooler_thx:
