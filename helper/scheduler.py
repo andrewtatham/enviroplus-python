@@ -120,11 +120,13 @@ class MyScheduler:
         is_summer = 6 <= month <= 8
         is_autumn = 9 <= month <= 10
         is_winter = month >= 11 or month <= 2
+        is_very_winter = month == 12 or month == 1
 
         logging.info('is_spring: {}'.format(is_spring))
         logging.info('is_summer: {}'.format(is_summer))
         logging.info('is_autumn: {}'.format(is_autumn))
         logging.info('is_winter: {}'.format(is_winter))
+        logging.info('is_very_winter: {}'.format(is_very_winter))
 
         # Mon to Fri 8:00 to 16:45
         # in mon/tue 7:00
@@ -163,7 +165,7 @@ class MyScheduler:
             on_below = 10.0
             off_above = 15.0
 
-        if is_winter:
+        if is_very_winter:
             if is_early_morning:
                 off_above += 1
             if is_morning:
