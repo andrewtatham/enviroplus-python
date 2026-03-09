@@ -150,8 +150,8 @@ class MyScheduler:
             duty_cycle = 20
 
         if is_spring:
-            on_below = 18.0
-            off_above = 20.0
+            on_below = 20.0
+            off_above = 22.0
         elif is_summer:
             on_below = 10.0
             off_above = 15.0
