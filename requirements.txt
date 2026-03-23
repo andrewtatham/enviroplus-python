@@ -4,3 +4,4 @@ pyHS100
 pytz
 astral
 colour
+requests

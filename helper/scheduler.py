@@ -6,6 +6,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from astral import Astral
 
 from helper import colour_helper
+from helper import weather_helper
 from helper.enviro_helper import EnviroWrapper
 from helper.kasa_helper import KasaWrapper
 from helper.phillips_hue_wrapper import HueWrapper
@@ -33,6 +34,7 @@ every_odd_minute = CronTrigger(minute="1-59/2")
 every_minute = CronTrigger(minute="*")
 every_thirty_seconds = CronTrigger(second="*/30")
 every_fifteen_seconds = CronTrigger(second="*/15")
+every_six_hours = CronTrigger(hour="*/6", minute=0)
 
 heater_trigger = every_minute
 lights_trigger = every_minute
@@ -57,6 +59,8 @@ class MyScheduler:
         self._enviro = EnviroWrapper()
         self._kasa = KasaWrapper()
         self._bright = 0
+        self._today_forecast = None
+        self._forecast_low_threshold_c = 10.0
         self._init()
 
         self.heater_on_for = 0
@@ -72,11 +76,21 @@ class MyScheduler:
 
         self._scheduler.add_job(func=self._get_sunset_sunrise, trigger=at_midnight)
         self._scheduler.add_job(func=self._get_sunset_sunrise)
+        self._scheduler.add_job(func=self._update_weather_forecast)
+        self._scheduler.add_job(func=self._update_weather_forecast, trigger=every_six_hours)
 
         self._scheduler.add_job(self._manage_heater)
         self._scheduler.add_job(self._manage_lights)
         self._scheduler.add_job(self._manage_heater, trigger=heater_trigger)
         self._scheduler.add_job(self._manage_lights, trigger=lights_trigger)
+
+    def _update_weather_forecast(self):
+        forecast = weather_helper.get_today_forecast()
+        if forecast:
+            self._today_forecast = forecast
+            logging.info('forecast: {}'.format(forecast))
+        else:
+            logging.warning('Unable to update weather forecast')
 
     def start(self):
         self._scheduler.print_jobs()
@@ -186,8 +200,14 @@ class MyScheduler:
         logging.info('heater_on_for: {0}'.format(self.heater_on_for))
         logging.info('heater_off_for: {0}'.format(self.heater_off_for))
 
+        forecast_low_below_threshold = weather_helper.is_today_low_below(
+            self._forecast_low_threshold_c,
+            self._today_forecast
+        )
+        logging.info('forecast low below {}C: {}'.format(self._forecast_low_threshold_c, forecast_low_below_threshold))
+
         cooler_thx = temperature > off_above or (in_work_hours and self.heater_on_for > duty_cycle)
-        warmer_plz = in_work_hours and temperature < on_below
+        warmer_plz = in_work_hours and temperature < on_below and forecast_low_below_threshold
 
         if cooler_thx:
             logging.info('cooler_thx')
