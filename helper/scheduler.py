@@ -220,7 +220,7 @@ class MyScheduler:
 
         logging.info('switch_on: {0}'.format(self.switch_on))
 
-        if self.switch_on:
+        if warmer_plz and self.switch_on:
             logging.info('Switching heater on')
             self._kasa.switch_on()
         elif cooler_thx:
