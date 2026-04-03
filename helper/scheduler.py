@@ -151,7 +151,7 @@ class MyScheduler:
         # in mon/tue 7:00
 
         in_work_hours = not on_holiday \
-                        not is_bank_holiday \
+                        and not is_bank_holiday \
                         and monday <= weekday <= friday \
                         and (8 <= hour or is_monday_or_tuesday and hour == 7) \
                         and (hour < 16 or hour == 16 and mins <= 45)
