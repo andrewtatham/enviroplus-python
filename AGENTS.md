@@ -24,6 +24,17 @@
   - `cd library && tox -vv` (as in `.travis.yml`).
   - `library/tests/conftest.py` mocks hardware modules by injecting into `sys.modules`.
 
+## Python version compatibility (mandatory)
+- **All code in this repo must be compatible with Python 2.7.**
+- Do NOT use any Python 3-only syntax or stdlib features, including:
+  - f-strings (`f"..."`) — use `"{}".format(...)` or `%` formatting instead.
+  - Variable annotations (`x: int = 0`) — use plain assignment or `# type:` comments.
+  - Function annotations (`def f(x: int) -> bool:`) — remove them entirely.
+  - `X | Y` union type hints — not valid in any Python 2 context.
+  - `datetime.date.fromisoformat()` — use `datetime.datetime.strptime(s, "%Y-%m-%d").date()`.
+  - `from typing import ...` — the `typing` module is not available in Python 2.7.
+  - `print(...)` as a function is fine in Python 2.7 (single-arg call), but avoid `print` as a statement without `from __future__ import print_function`.
+
 ## Project-specific coding patterns (follow these)
 - Hardware imports often use compatibility fallback patterns (e.g., `try: from ltr559 import LTR559 ... except ImportError: import ltr559` in `helper/enviro_helper.py` and examples).
 - Several modules rely on **module-level mutable state**:
