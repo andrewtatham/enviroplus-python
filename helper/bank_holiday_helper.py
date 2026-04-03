@@ -8,6 +8,7 @@ session (or after a cache TTL expires).
 import datetime
 import logging
 import threading
+from typing import Optional
 
 import requests
 
@@ -17,7 +18,7 @@ _DIVISION = "england-and-wales"
 # Cache state
 _cache_lock = threading.Lock()
 _cached_dates: set = set()
-_cache_fetched_on: datetime.date | None = None
+_cache_fetched_on: Optional[datetime.date] = None
 _CACHE_TTL_DAYS = 1  # Refresh the cache at most once per day
 
 
@@ -77,3 +78,9 @@ def get_is_bank_holiday(dt: datetime.datetime) -> bool:
     date = dt.date() if isinstance(dt, datetime.datetime) else dt
     return date in _get_cached_dates()
 
+if __name__ == "__main__":
+    # Example usage: print the next 30 days and whether each is a bank holiday
+    today = datetime.date.today()
+    for i in range(30):
+        day = today + datetime.timedelta(days=i)
+        print(f"{day}: {'Bank Holiday' if get_is_bank_holiday(day) else 'Not a Bank Holiday'}")
