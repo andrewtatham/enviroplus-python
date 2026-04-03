@@ -8,7 +8,6 @@ session (or after a cache TTL expires).
 import datetime
 import logging
 import threading
-from typing import Optional
 
 import requests
 
@@ -17,12 +16,12 @@ _DIVISION = "england-and-wales"
 
 # Cache state
 _cache_lock = threading.Lock()
-_cached_dates: set = set()
-_cache_fetched_on: Optional[datetime.date] = None
+_cached_dates = set()
+_cache_fetched_on = None
 _CACHE_TTL_DAYS = 1  # Refresh the cache at most once per day
 
 
-def _fetch_bank_holidays() -> set:
+def _fetch_bank_holidays():
     """Download bank holiday dates from GOV.UK and return them as a set of
     ``datetime.date`` objects for the configured division."""
     try:
@@ -33,7 +32,7 @@ def _fetch_bank_holidays() -> set:
         dates = set()
         for event in events:
             try:
-                dates.add(datetime.date.fromisoformat(event["date"]))
+                dates.add(datetime.datetime.strptime(event["date"], "%Y-%m-%d").date())
             except (KeyError, ValueError):
                 pass
         logging.info("bank_holiday_helper: loaded %d bank holidays from GOV.UK", len(dates))
@@ -43,7 +42,7 @@ def _fetch_bank_holidays() -> set:
         return set()
 
 
-def _get_cached_dates() -> set:
+def _get_cached_dates():
     """Return the cached set of bank holiday dates, refreshing if stale."""
     global _cached_dates, _cache_fetched_on
 
@@ -62,25 +61,26 @@ def _get_cached_dates() -> set:
         return _cached_dates
 
 
-def get_is_bank_holiday(dt: datetime.datetime) -> bool:
-    """Return ``True`` if *dt* falls on a UK bank holiday (England & Wales).
+def get_is_bank_holiday(dt):
+    """Return True if *dt* falls on a UK bank holiday (England & Wales).
 
     The GOV.UK API is consulted once per day; subsequent calls within the same
     day are served from the in-process cache.  If the API is unreachable the
-    function returns ``False`` so the rest of the scheduler is unaffected.
+    function returns False so the rest of the scheduler is unaffected.
 
     Args:
-        dt: A ``datetime.datetime`` (naive or timezone-aware).
+        dt: A datetime.datetime or datetime.date object.
 
     Returns:
-        ``True`` if the date is a bank holiday, ``False`` otherwise.
+        True if the date is a bank holiday, False otherwise.
     """
     date = dt.date() if isinstance(dt, datetime.datetime) else dt
     return date in _get_cached_dates()
+
 
 if __name__ == "__main__":
     # Example usage: print the next 30 days and whether each is a bank holiday
     today = datetime.date.today()
     for i in range(30):
         day = today + datetime.timedelta(days=i)
-        print(f"{day}: {'Bank Holiday' if get_is_bank_holiday(day) else 'Not a Bank Holiday'}")
+        print("{0}: {1}".format(day, "Bank Holiday" if get_is_bank_holiday(day) else "Not a Bank Holiday"))
