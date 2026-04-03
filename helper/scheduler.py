@@ -7,6 +7,7 @@ from astral import Astral
 
 from helper import colour_helper
 from helper import weather_helper
+from helper.bank_holiday_helper import get_is_bank_holiday
 from helper.enviro_helper import EnviroWrapper
 from helper.kasa_helper import KasaWrapper
 from helper.phillips_hue_wrapper import HueWrapper
@@ -136,6 +137,10 @@ class MyScheduler:
         is_winter = month >= 11 or month <= 2
         is_very_winter = month == 12 or month == 1
 
+        is_bank_holiday = get_is_bank_holiday(now)
+        logging.info('is_bank_holiday: {}'.format(is_bank_holiday))
+
+
         logging.info('is_spring: {}'.format(is_spring))
         logging.info('is_summer: {}'.format(is_summer))
         logging.info('is_autumn: {}'.format(is_autumn))
@@ -146,6 +151,7 @@ class MyScheduler:
         # in mon/tue 7:00
 
         in_work_hours = not on_holiday \
+                        not is_bank_holiday \
                         and monday <= weekday <= friday \
                         and (8 <= hour or is_monday_or_tuesday and hour == 7) \
                         and (hour < 16 or hour == 16 and mins <= 45)
