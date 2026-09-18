@@ -213,6 +213,8 @@ class HueWrapper(object):
 
         if is_daytime:
             bright = 254
+        elif is_evening:
+            bright = 64
         else:
             bright = 8
 
