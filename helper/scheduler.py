@@ -176,8 +176,8 @@ class MyScheduler:
             on_below = 10.0
             off_above = 15.0
         elif is_autumn:
-            on_below = 17.0
-            off_above = 20.0
+            on_below = 18.0
+            off_above = 22.0
         elif is_winter:
             on_below = 22.0
             off_above = 24.0
