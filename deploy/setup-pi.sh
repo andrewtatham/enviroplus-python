@@ -18,6 +18,10 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
 echo "== enable I2C + SPI"
 sudo raspi-config nonint do_i2c 0
 sudo raspi-config nonint do_spi 0
+# The Enviro+ LCD uses GPIO9 (SPI0 MISO) as its data/command pin and never reads
+# from the display, so release MISO. Without this the gpiod-based st7735 library
+# can't claim GPIO9. Replaces the plain dtparam=spi=on.
+sudo sed -i 's/^dtparam=spi=on/dtoverlay=spi0-2cs,no_miso/' "$BOOT_CFG"
 # Enviro+ microphone
 grep -q '^dtoverlay=adau7002-simple' "$BOOT_CFG" || \
     echo 'dtoverlay=adau7002-simple' | sudo tee -a "$BOOT_CFG" >/dev/null
