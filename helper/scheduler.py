@@ -39,6 +39,10 @@ every_fifteen_seconds = CronTrigger(second="*/15")
 every_six_hours = CronTrigger(hour="*/6", minute=0)
 
 heater_trigger = every_minute
+
+# A "manual session" is the heater being switched on by hand outside the heating
+# window. The scheduler then applies the duty cycle to it, up to this long.
+MANUAL_SESSION_MAX = datetime.timedelta(hours=2)
 lights_trigger = every_minute
 
 tz = pytz.timezone("Europe/London")
@@ -55,6 +59,11 @@ class MuteFilter(object):
 
 
 class MyScheduler:
+    # Manual-session state (see _update_manual_session)
+    _manual_started = None      # when the current manual session began, else None
+    _manual_resting = False     # True while the scheduler has forced a duty-cycle rest
+    _scheduler_on = False       # True if the scheduler itself last switched the heater on
+
     def __init__(self):
         self._scheduler = BlockingScheduler()
         self._hue = HueWrapper()
@@ -232,8 +241,13 @@ class MyScheduler:
 
         logging.info('forecast allows heat: {}'.format(forecast_allows_heat))
 
-        cooler_thx = temperature > off_above or (heating_window and self.heater_on_for > duty_cycle)
-        warmer_plz = heating_window and temperature < on_below and forecast_allows_heat
+        manual_active, manual_force_off = self._update_manual_session(
+            now, is_on, heating_window, temperature, off_above)
+
+        # In a manual session the user asked for heat, so the forecast gate does not apply.
+        controlling = heating_window or manual_active
+        cooler_thx = temperature > off_above             or (controlling and self.heater_on_for > duty_cycle)             or manual_force_off
+        warmer_plz = (heating_window and temperature < on_below and forecast_allows_heat)             or (manual_active and temperature < on_below)
 
         if cooler_thx:
             logging.info('cooler_thx')
@@ -249,9 +263,56 @@ class MyScheduler:
         if warmer_plz and self.switch_on:
             logging.info('Switching heater on')
             self._kasa.switch_on()
+            self._scheduler_on = True
+            self._manual_resting = False
         elif cooler_thx:
             logging.info('Switching heater off')
             self._kasa.switch_off()
+            self._scheduler_on = False
+            # A duty-cycle rest inside a manual session is expected to be followed by
+            # the heater being off, which must not look like the user switching it off.
+            self._manual_resting = manual_active and not manual_force_off and temperature <= off_above
+
+    def _update_manual_session(self, now, is_on, heating_window, temperature, off_above):
+        """Track a manual session. Returns (active, force_off).
+
+        A session starts when the heater is on outside the heating window and the
+        scheduler did not switch it on (so a run the scheduler started that is still
+        going when work ends is NOT a manual session). It ends when the room passes
+        off_above, the user switches the heater off, MANUAL_SESSION_MAX passes, or the
+        heating window opens (the normal logic takes over).
+        """
+        if not is_on:
+            self._scheduler_on = False
+
+        if heating_window:
+            self._end_manual_session('heating window is open')
+            return False, False
+
+        if self._manual_started is None:
+            if is_on and not self._scheduler_on:
+                self._manual_started = now
+                self._manual_resting = False
+                logging.info('Manual session started')
+                return True, False
+            return False, False
+
+        if now - self._manual_started >= MANUAL_SESSION_MAX:
+            self._end_manual_session('time cap reached')
+            return False, True
+        if temperature > off_above:
+            self._end_manual_session('target temperature reached')
+            return False, False
+        if not is_on and not self._manual_resting:
+            self._end_manual_session('heater switched off by user')
+            return False, False
+        return True, False
+
+    def _end_manual_session(self, reason):
+        if self._manual_started is not None:
+            logging.info('Manual session ended: {}'.format(reason))
+        self._manual_started = None
+        self._manual_resting = False
 
     def _get_sunset_sunrise(self):
         a = Astral()

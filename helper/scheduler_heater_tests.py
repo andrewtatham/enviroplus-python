@@ -75,17 +75,26 @@ class HeaterScenarioTestCase(unittest.TestCase):
         sched.datetime = self._orig_dt
         sched.get_is_bank_holiday = self._orig_bh
 
-    def run_once(self, now, temperature, fc, heater_on=False, on_for=0):
-        sched.datetime = FakeDatetimeModule(now)
+    def make(self, fc, heater_on=False, on_for=0):
         s = sched.MyScheduler.__new__(sched.MyScheduler)
-        s._enviro = FakeEnviro(temperature)
+        s._enviro = FakeEnviro(20.0)
         s._kasa = FakeKasa(heater_on)
         s._today_forecast = fc
         s.heater_on_for = on_for
         s.heater_off_for = 5
         s.switch_on = False
+        return s
+
+    def tick(self, s, now, temperature):
+        """Run one scheduler minute on an existing scheduler; return the plug calls it made."""
+        sched.datetime = FakeDatetimeModule(now)
+        s._enviro.temperature = temperature
+        s._kasa.calls = []
         s._manage_heater()
         return s._kasa.calls
+
+    def run_once(self, now, temperature, fc, heater_on=False, on_for=0):
+        return self.tick(self.make(fc, heater_on, on_for), now, temperature)
 
     # Friday 13 Nov 2026
     FRI_0930 = datetime.datetime(2026, 11, 13, 9, 30)
@@ -143,6 +152,98 @@ class HeaterScenarioTestCase(unittest.TestCase):
 
     def test_fallback_has_no_preheat(self):
         self.assertEqual(self.run_once(self.FRI_0730, 18.0, None), [])
+
+
+    # ---- manual sessions (heater switched on by hand outside the heating window) ----
+
+    def sat(self, h, m=0):
+        return datetime.datetime(2026, 11, 14, h, m)
+
+    SAT_FC = forecast(5.6, -1.9, datetime.date(2026, 11, 14))
+
+    def test_manual_session_starts_when_user_switches_on_outside_window(self):
+        s = self.make(self.SAT_FC, heater_on=True)
+        self.assertEqual(self.tick(s, self.sat(19), 20.0), [])
+        self.assertIsNotNone(s._manual_started)
+
+    def test_manual_session_applies_duty_cycle(self):
+        s = self.make(self.SAT_FC, heater_on=True, on_for=10)
+        self.assertEqual(self.tick(s, self.sat(19), 20.0), ["off"])
+        self.assertIsNotNone(s._manual_started)      # still a session
+        self.assertTrue(s._manual_resting)
+
+    def test_manual_session_resumes_after_rest(self):
+        s = self.make(self.SAT_FC, heater_on=True, on_for=10)
+        self.tick(s, self.sat(19), 20.0)              # forced off
+        s._kasa.calls = []
+        self.assertEqual(self.tick(s, self.sat(19, 1), 20.0), [])       # resting
+        self.assertEqual(self.tick(s, self.sat(19, 2), 20.0), ["on"])   # rest over
+        self.assertFalse(s._manual_resting)
+
+    def test_manual_session_does_not_resume_if_room_warm_enough(self):
+        s = self.make(self.SAT_FC, heater_on=True, on_for=10)
+        self.tick(s, self.sat(19), 20.0)
+        self.tick(s, self.sat(19, 1), 22.5)
+        self.assertEqual(self.tick(s, self.sat(19, 2), 22.5), [])       # 22.5 >= on_below 22
+
+    def test_manual_session_ignores_warm_forecast(self):
+        warm = forecast(18.0, 9.0, datetime.date(2026, 11, 14))
+        s = self.make(warm, heater_on=True, on_for=10)
+        self.tick(s, self.sat(19), 20.0)
+        self.tick(s, self.sat(19, 1), 20.0)
+        self.assertEqual(self.tick(s, self.sat(19, 2), 20.0), ["on"])
+
+    def test_manual_session_ends_on_temperature(self):
+        s = self.make(self.SAT_FC, heater_on=True)
+        self.tick(s, self.sat(19), 20.0)
+        self.assertEqual(self.tick(s, self.sat(19, 1), 24.5), ["off"])
+        self.assertIsNone(s._manual_started)
+
+    def test_manual_session_ends_when_user_switches_off(self):
+        s = self.make(self.SAT_FC, heater_on=True)
+        self.tick(s, self.sat(19), 20.0)
+        s._kasa._on = False                           # user presses the switch
+        self.assertEqual(self.tick(s, self.sat(19, 1), 20.0), [])
+        self.assertIsNone(s._manual_started)
+
+    def test_manual_session_two_hour_cap(self):
+        s = self.make(self.SAT_FC, heater_on=True)
+        self.tick(s, self.sat(19), 20.0)
+        s.heater_on_for = 0
+        self.assertEqual(self.tick(s, self.sat(20, 59), 20.0), [])      # 1h59
+        s.heater_on_for = 0
+        self.assertEqual(self.tick(s, self.sat(21, 0), 20.0), ["off"])  # 2h00
+        self.assertIsNone(s._manual_started)
+
+    def test_manual_session_ends_when_heating_window_opens(self):
+        fri = datetime.date(2026, 11, 13)
+        s = self.make(forecast(5.6, -1.9, fri), heater_on=True)
+        self.tick(s, datetime.datetime(2026, 11, 13, 7, 10), 20.0)      # before pre-heat window
+        self.assertIsNotNone(s._manual_started)
+        self.tick(s, datetime.datetime(2026, 11, 13, 7, 20), 20.0)      # inside pre-heat window
+        self.assertIsNone(s._manual_started)
+
+    def test_end_of_workday_run_is_not_a_manual_session(self):
+        # The scheduler starts the heater at 16:30; at 16:46 the window has closed and the
+        # heater is still on. That is the scheduler's own run, not a manual session.
+        fri = datetime.date(2026, 11, 13)
+        s = self.make(forecast(5.6, -1.9, fri), heater_on=False)
+        self.assertEqual(self.tick(s, datetime.datetime(2026, 11, 13, 16, 30), 20.0), ["on"])
+        self.assertTrue(s._kasa.is_on())
+        self.assertEqual(self.tick(s, datetime.datetime(2026, 11, 13, 16, 31), 20.0), ["on"])
+        self.assertEqual(self.tick(s, datetime.datetime(2026, 11, 13, 16, 46), 20.0), [])
+        self.assertIsNone(s._manual_started)
+        # and it still ends by temperature only, as before
+        self.assertEqual(self.tick(s, datetime.datetime(2026, 11, 13, 17, 30), 24.5), ["off"])
+
+    def test_end_of_workday_run_is_not_a_manual_session_after_duty_cycle(self):
+        fri = datetime.date(2026, 11, 13)
+        s = self.make(forecast(5.6, -1.9, fri), heater_on=False)
+        self.tick(s, datetime.datetime(2026, 11, 13, 16, 30), 20.0)
+        for minute in range(31, 46):
+            self.tick(s, datetime.datetime(2026, 11, 13, 16, minute), 20.0)
+        self.tick(s, datetime.datetime(2026, 11, 13, 16, 50), 20.0)
+        self.assertIsNone(s._manual_started)
 
 
 if __name__ == "__main__":
