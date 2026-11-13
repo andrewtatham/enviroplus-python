@@ -1,0 +1,7 @@
+# Hardware libraries for the Pi (RPi.GPIO/lgpio, spidev, smbus2, numpy, PIL come from apt)
+st7735
+ltr559
+pimoroni-bme280
+fonts
+font-roboto
+gpiodevice

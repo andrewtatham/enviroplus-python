@@ -1,7 +1,7 @@
-apscheduler
+apscheduler<4
 phue
 pyHS100
 pytz
-astral
+astral==1.10.1
 colour
 requests

@@ -1,0 +1,16 @@
+[Unit]
+Description=Enviro+ heater and lights scheduler
+Wants=network-online.target
+After=network-online.target time-sync.target
+
+[Service]
+User=@USER@
+WorkingDirectory=@APP_DIR@
+Environment=PYTHONUNBUFFERED=1
+ExecStartPre=/bin/bash @APP_DIR@/deploy/update.sh
+ExecStart=@APP_DIR@/.venv/bin/python main.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
