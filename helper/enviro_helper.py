@@ -31,21 +31,27 @@ class EnviroWrapper:
         # BME280 temperature/pressure/humidity sensor
         self.bme280 = BME280()
 
-        # Create ST7735 LCD display class
-        self.st7735 = ST7735.ST7735(
-            port=0,
-            cs=1,
-            dc=9,
-            backlight=12,
-            rotation=270,
-            spi_speed_hz=10000000
-        )
-
-        # Initialize display
-        self.st7735.begin()
-
-        self.WIDTH = self.st7735.width
-        self.HEIGHT = self.st7735.height
+        # Create ST7735 LCD display class. The display is optional: the heater and
+        # lights only need the sensors, so carry on without it if it can't start.
+        self.st7735 = None
+        self.WIDTH = 160
+        self.HEIGHT = 80
+        try:
+            # Pin names (not ints) are required by the gpiod-based st7735 library
+            self.st7735 = ST7735.ST7735(
+                port=0,
+                cs=1,
+                dc="GPIO9",
+                backlight="GPIO12",
+                rotation=270,
+                spi_speed_hz=10000000
+            )
+            self.st7735.begin()
+            self.WIDTH = self.st7735.width
+            self.HEIGHT = self.st7735.height
+        except (Exception, SystemExit) as ex:  # gpiodevice exits on pin errors
+            logging.getLogger(__name__).warning("Display unavailable, continuing without it: %s", ex)
+            self.st7735 = None
 
         # Set up canvas and font
         self.img = Image.new('RGB', (self.WIDTH, self.HEIGHT), color=(0, 0, 0))
@@ -92,7 +98,8 @@ class EnviroWrapper:
             self.draw.rectangle((i, line_y, i + 1, line_y + 1), (0, 0, 0))
         # Write the text at the top in black
         self.draw.text((0, 0), self.message, font=self.font, fill=(0, 0, 0))
-        self.st7735.display(self.img)
+        if self.st7735 is not None:
+            self.st7735.display(self.img)
 
     def get_lux(self):
         unit = "Lux"
