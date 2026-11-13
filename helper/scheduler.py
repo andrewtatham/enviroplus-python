@@ -6,6 +6,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from astral import Astral
 
 from helper import colour_helper
+from helper import heating_rules
 from helper import weather_helper
 from helper.bank_holiday_helper import get_is_bank_holiday
 from helper.enviro_helper import EnviroWrapper
@@ -61,7 +62,6 @@ class MyScheduler:
         self._kasa = KasaWrapper()
         self._bright = 0
         self._today_forecast = None
-        self._forecast_low_threshold_c = 10.0
         self._init()
 
         self.heater_on_for = 0
@@ -191,6 +191,30 @@ class MyScheduler:
             if is_morning:
                 off_above += 1
 
+        # The month-based values above are the fallback. When there is a usable
+        # forecast for today, the forecast decides whether to heat, the targets,
+        # and how early to start before work.
+        plan = heating_rules.plan_for(self._today_forecast, now.date())
+        if plan:
+            logging.info('forecast plan: {}'.format(plan))
+            forecast_allows_heat = plan['heat']
+            preheat_minutes = plan['preheat_minutes']
+            if plan['heat']:
+                on_below = plan['on_below']
+                off_above = plan['off_above']
+        else:
+            logging.warning('No usable forecast for today, using month-based fallback rules')
+            forecast_allows_heat = True
+            preheat_minutes = 0
+
+        is_workday = not on_holiday and not is_bank_holiday and monday <= weekday <= friday
+        work_start = now.replace(hour=7 if is_monday_or_tuesday else 8, minute=0, second=0, microsecond=0)
+        in_preheat = (is_workday and preheat_minutes > 0 and
+                      work_start - datetime.timedelta(minutes=preheat_minutes) <= now < work_start)
+        heating_window = in_work_hours or in_preheat
+        logging.info('in_preheat: {} ({} min)'.format(in_preheat, preheat_minutes))
+        logging.info('heating_window: {}'.format(heating_window))
+
         logging.info('on_below: {}'.format(on_below))
         logging.info('off_above: {}'.format(off_above))
 
@@ -206,14 +230,10 @@ class MyScheduler:
         logging.info('heater_on_for: {0}'.format(self.heater_on_for))
         logging.info('heater_off_for: {0}'.format(self.heater_off_for))
 
-        forecast_low_below_threshold = weather_helper.is_today_low_below(
-            self._forecast_low_threshold_c,
-            self._today_forecast
-        )
-        logging.info('forecast low below {}C: {}'.format(self._forecast_low_threshold_c, forecast_low_below_threshold))
+        logging.info('forecast allows heat: {}'.format(forecast_allows_heat))
 
-        cooler_thx = temperature > off_above or (in_work_hours and self.heater_on_for > duty_cycle)
-        warmer_plz = in_work_hours and temperature < on_below and forecast_low_below_threshold
+        cooler_thx = temperature > off_above or (heating_window and self.heater_on_for > duty_cycle)
+        warmer_plz = heating_window and temperature < on_below and forecast_allows_heat
 
         if cooler_thx:
             logging.info('cooler_thx')
