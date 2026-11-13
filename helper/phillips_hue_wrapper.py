@@ -1,4 +1,5 @@
 import datetime
+import os
 import pprint
 import random
 import time
@@ -10,8 +11,12 @@ from helper import colour_helper
 
 
 class HueWrapper(object):
-    def __init__(self, bridge_ip='0017884e90fb.local', username="kDzpGE-UoWwZ6c0pmVmNH1KJCYAUYqgrpeEdbGC4",
+    def __init__(self, bridge_ip=None, username=None,
                  light_configs=None, profiles=None):
+        # The API key is a secret and must not live in the repo. If no username is
+        # given, phue reads it from ~/.python_hue (keyed by bridge address); to create
+        # one, press the bridge button and run the app once.
+        # Overrides: HUE_BRIDGE_IP, HUE_USERNAME.
         if not light_configs:
             light_configs = [
                 {'name': 'Hue color spot 1', 'is_colour': True},
@@ -75,8 +80,8 @@ class HueWrapper(object):
         self.light_configs = light_configs
         self.profiles = cycle(profiles)
         self.profile = next(self.profiles)
-        self.bridge_ip = bridge_ip
-        self.username = username
+        self.bridge_ip = bridge_ip or os.environ.get('HUE_BRIDGE_IP', '0017884e90fb.local')
+        self.username = username or os.environ.get('HUE_USERNAME')
         self.b = None
         self.lights = []
 
