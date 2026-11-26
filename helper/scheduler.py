@@ -135,8 +135,8 @@ class MyScheduler:
 
         is_monday_or_tuesday = weekday == monday or weekday == tuesday
 
-        holiday_from = datetime.datetime(year=2026, month=10, day=27, hour=0, minute=00)
-        holiday_to = datetime.datetime(year=2026, month=11, day=2, hour=0, minute=00)
+        holiday_from = datetime.datetime(year=2026, month=11, day=27, hour=0, minute=00)
+        holiday_to = datetime.datetime(year=2026, month=11, day=28, hour=0, minute=00)
         on_holiday = holiday_from < now < holiday_to
         logging.info('on_holiday: {}'.format(on_holiday))
 
