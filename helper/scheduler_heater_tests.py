@@ -70,10 +70,14 @@ class HeaterScenarioTestCase(unittest.TestCase):
         self._orig_dt = sched.datetime
         self._orig_bh = sched.get_is_bank_holiday
         sched.get_is_bank_holiday = lambda now: False
+        self._orig_holiday = sched.holiday_store.is_holiday
+        self.holidays = set()
+        sched.holiday_store.is_holiday = lambda now: now.date() in self.holidays
 
     def tearDown(self):
         sched.datetime = self._orig_dt
         sched.get_is_bank_holiday = self._orig_bh
+        sched.holiday_store.is_holiday = self._orig_holiday
 
     def make(self, fc, heater_on=False, on_for=0):
         s = sched.MyScheduler.__new__(sched.MyScheduler)
@@ -153,6 +157,24 @@ class HeaterScenarioTestCase(unittest.TestCase):
     def test_fallback_has_no_preheat(self):
         self.assertEqual(self.run_once(self.FRI_0730, 18.0, None), [])
 
+
+    def test_no_heating_on_holiday(self):
+        self.holidays = {self.TODAY}
+        fc = forecast(2.0, -4.0, self.TODAY)
+        self.assertEqual(self.run_once(self.FRI_0930, 15.0, fc), [])
+        self.assertEqual(self.run_once(self.FRI_0730, 15.0, fc), [])    # nor pre-heat
+
+    def test_holiday_added_during_a_run_switches_heater_off(self):
+        s = self.make(forecast(5.6, -1.9, self.TODAY))
+        self.assertEqual(self.tick(s, self.FRI_0930, 20.0), ["on"])
+        self.holidays = {self.TODAY}
+        self.assertEqual(self.tick(s, datetime.datetime(2026, 11, 13, 9, 31), 20.0), ["off"])
+
+    def test_manual_use_still_works_on_holiday(self):
+        self.holidays = {self.TODAY}
+        s = self.make(forecast(5.6, -1.9, self.TODAY), heater_on=True)
+        self.assertEqual(self.tick(s, self.FRI_0930, 20.0), [])
+        self.assertIsNotNone(s._manual_started)
 
     # ---- manual sessions (heater switched on by hand outside the heating window) ----
 

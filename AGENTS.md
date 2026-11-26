@@ -10,6 +10,7 @@
 - Entry point for automation mode is `main.py` -> `helper/scheduler.py:MyScheduler`.
 - `MyScheduler` wires three adapters: `EnviroWrapper` (`helper/enviro_helper.py`), `HueWrapper` (`helper/phillips_hue_wrapper.py`), and `KasaWrapper` (`helper/kasa_helper.py`).
 - Heater control loop (`_manage_heater`) reads compensated temperature from `EnviroWrapper.get_temperature()` and switches Kasa device alias `Heater` using duty-cycle counters (`heater_on_for`, `heater_off_for`).
+- Holidays (no automatic heating) live in the git-ignored `holidays.json`, read by `helper/holiday_store.py` and edited through the web UI (`helper/web_server.py` + `web/index.html`, port 8080, no auth). Tests: `python -m unittest helper.holiday_tests helper.scheduler_heater_tests`.
 - Lighting loop (`_manage_lights`) delegates to `HueWrapper.do_whatever()`, which selects profiles by weekday/hour and uses global day state from `helper/colour_helper.py`.
 - Sun events are recomputed daily via Astral (`_get_sunset_sunrise`), then translated into APScheduler triggers; sunrise/sunset interpolation updates `colour_helper.day_factor`.
 

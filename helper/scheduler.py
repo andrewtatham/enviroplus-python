@@ -7,6 +7,7 @@ from astral import Astral
 
 from helper import colour_helper
 from helper import heating_rules
+from helper import holiday_store
 from helper import weather_helper
 from helper.bank_holiday_helper import get_is_bank_holiday
 from helper.enviro_helper import EnviroWrapper
@@ -135,9 +136,7 @@ class MyScheduler:
 
         is_monday_or_tuesday = weekday == monday or weekday == tuesday
 
-        holiday_from = datetime.datetime(year=2026, month=11, day=27, hour=0, minute=00)
-        holiday_to = datetime.datetime(year=2026, month=11, day=28, hour=0, minute=00)
-        on_holiday = holiday_from < now < holiday_to
+        on_holiday = holiday_store.is_holiday(now)
         logging.info('on_holiday: {}'.format(on_holiday))
 
         is_spring = 3 <= month <= 5
@@ -244,9 +243,12 @@ class MyScheduler:
         manual_active, manual_force_off = self._update_manual_session(
             now, is_on, heating_window, temperature, off_above)
 
+        # A holiday added while the scheduler's own run is on stops that run.
+        holiday_stop = on_holiday and is_on and self._scheduler_on and not manual_active
+
         # In a manual session the user asked for heat, so the forecast gate does not apply.
         controlling = heating_window or manual_active
-        cooler_thx = temperature > off_above             or (controlling and self.heater_on_for > duty_cycle)             or manual_force_off
+        cooler_thx = temperature > off_above             or (controlling and self.heater_on_for > duty_cycle)             or manual_force_off             or holiday_stop
         warmer_plz = (heating_window and temperature < on_below and forecast_allows_heat)             or (manual_active and temperature < on_below)
 
         if cooler_thx:
