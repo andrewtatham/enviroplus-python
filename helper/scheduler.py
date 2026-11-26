@@ -46,6 +46,8 @@ heater_trigger = every_minute
 # window. The scheduler then applies the duty cycle to it, up to this long.
 MANUAL_SESSION_MAX = datetime.timedelta(hours=2)
 lights_trigger = every_minute
+# Half a minute away from the heater job, as recording noise takes a moment
+ambient_trigger = CronTrigger(second=30)
 
 tz = pytz.timezone("Europe/London")
 is_linux = platform.platform().startswith('Linux')
@@ -99,6 +101,8 @@ class MyScheduler:
         self._scheduler.add_job(self._manage_lights)
         self._scheduler.add_job(self._manage_heater, trigger=heater_trigger)
         self._scheduler.add_job(self._manage_lights, trigger=lights_trigger)
+        self._scheduler.add_job(self._record_ambient)
+        self._scheduler.add_job(self._record_ambient, trigger=ambient_trigger)
 
     def _update_weather_forecast(self):
         forecast = weather_helper.get_today_forecast()
@@ -116,6 +120,9 @@ class MyScheduler:
         self._scheduler.shutdown()
         # if self._hue:
         #     self._hue.off()
+
+    def _record_ambient(self):
+        self._enviro.record_ambient()
 
     def _manage_lights(self):
         if self._hue.is_on:

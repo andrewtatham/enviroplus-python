@@ -24,7 +24,8 @@ from PIL import ImageFont
 from fonts.ttf import RobotoMedium as UserFont
 import logging
 
-from helper import temperature_history
+from helper import history
+from helper import noise_helper
 
 
 class EnviroWrapper:
@@ -103,11 +104,16 @@ class EnviroWrapper:
         if self.st7735 is not None:
             self.st7735.display(self.img)
 
-    def get_lux(self):
-        unit = "Lux"
-        data = ltr559.get_lux()
-        self.display_text("light", data, unit)
-        return data
+    def record_ambient(self):
+        """Add light and noise readings to the web history. The LCD is left alone."""
+        for name, read in (("light", ltr559.get_lux), ("noise", noise_helper.get_noise_level)):
+            try:
+                value = read()
+            except Exception as ex:  # one failing sensor must not stop the other
+                logging.getLogger(__name__).warning("Unable to read %s: %s", name, ex)
+                continue
+            history.record(name, value)
+            logging.info("%s: %.1f", name, value)
 
     def get_temperature(self):
         # variable = "temperature"
@@ -119,7 +125,7 @@ class EnviroWrapper:
         raw_temp = self.bme280.get_temperature()
         data = 0.995815187 * raw_temp - 0.088599162 * avg_cpu_temp
         self.display_text("temperature", data, unit)
-        temperature_history.record(data)
+        history.record("temperature", data)
         message = "raw: {: .1f} cpu: {: .1f} calc: {: .1f} ".format(raw_temp, avg_cpu_temp, data)
         logging.info(message)
         return data

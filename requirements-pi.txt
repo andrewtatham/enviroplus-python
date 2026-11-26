@@ -5,3 +5,4 @@ pimoroni-bme280
 fonts
 font-roboto
 gpiodevice
+sounddevice

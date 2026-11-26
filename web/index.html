@@ -45,8 +45,8 @@
   #err { margin: 12px 0; }
   /* The chart copies the LCD: black on white over blue-to-red columns, in both themes. */
   .lcd { background: #fff; color: #000; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
-  #reading { font-size: 22px; font-weight: 600; padding: 8px 14px; font-variant-numeric: tabular-nums; }
-  #chart { display: block; width: 100%; height: 180px; touch-action: pan-y; }
+  .reading { font-size: 22px; font-weight: 600; padding: 8px 14px; font-variant-numeric: tabular-nums; }
+  .lcd canvas { display: block; width: 100%; height: 180px; touch-action: pan-y; }
   .axis { display: flex; justify-content: space-between; gap: 10px; color: var(--muted); font-size: 13px; margin-top: 6px; }
   .power { display: flex; gap: 8px; flex-wrap: wrap; }
   button.danger { color: var(--err); }
@@ -61,12 +61,7 @@
   <div id="today" class="card">Loading…</div>
   <div id="err" role="alert" hidden></div>
 
-  <h2>Temperature</h2>
-  <div class="lcd">
-    <div id="reading">Waiting for readings…</div>
-    <canvas id="chart" role="img" aria-label="Recent temperature"></canvas>
-  </div>
-  <div class="axis"><span id="first"></span><span id="extent"></span><span id="last"></span></div>
+  <div id="charts"></div>
 
   <h2>Add a holiday</h2>
   <div class="card">
@@ -182,18 +177,52 @@ $("#addTomorrow").onclick = () => state && quick(nextDay(state.today));
 $("#from").onchange = () => { $("#to").min = $("#from").value; };
 $("#form").onreset = () => { $("#to").min = ""; };
 
-let samples = [];
-let hover = null;   // index of the reading under the pointer
-
 const clock = (t) => new Date(t * 1000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
+const charts = [
+  { key: "temperature", title: "Temperature", short: "temp", unit: "°C" },
+  { key: "light", title: "Light", short: "light", unit: "lux" },
+  { key: "noise", title: "Noise", short: "noise", unit: "dBFS" },
+].map((chart) => {
+  const el = (tag, cls, parent) => {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    parent.appendChild(e);
+    return e;
+  };
+  el("h2", "", $("#charts")).textContent = chart.title;
+  const lcd = el("div", "lcd", $("#charts"));
+  chart.reading = el("div", "reading", lcd);
+  chart.reading.textContent = "Waiting for readings…";
+  chart.canvas = el("canvas", "", lcd);
+  chart.canvas.setAttribute("role", "img");
+  chart.canvas.setAttribute("aria-label", "Recent " + chart.key);
+  const axis = el("div", "axis", $("#charts"));
+  chart.first = el("span", "", axis);
+  chart.extent = el("span", "", axis);
+  chart.last = el("span", "", axis);
+  chart.samples = [];
+  chart.hover = null;   // index of the reading under the pointer
+  const point = (e) => {
+    const n = chart.samples.length;
+    if (!n) return;
+    const box = chart.canvas.getBoundingClientRect();
+    chart.hover = Math.max(0, Math.min(n - 1, Math.floor((e.clientX - box.left) / box.width * n)));
+    drawChart(chart);
+  };
+  chart.canvas.onpointermove = point;
+  chart.canvas.onpointerdown = point;
+  chart.canvas.onpointerleave = () => { chart.hover = null; drawChart(chart); };
+  return chart;
+});
+
 // Same scaling and colours as EnviroWrapper.display_text on the LCD.
-function drawChart() {
-  const c = $("#chart"), g = c.getContext("2d"), ratio = window.devicePixelRatio || 1;
-  const W = c.clientWidth, H = c.clientHeight;
+function drawChart(chart) {
+  const c = chart.canvas, g = c.getContext("2d"), ratio = window.devicePixelRatio || 1;
+  const W = c.clientWidth, H = c.clientHeight, samples = chart.samples, hover = chart.hover;
   c.width = W * ratio; c.height = H * ratio; g.scale(ratio, ratio);
   if (!samples.length) return;
-  const values = samples.map(s => s.c), min = Math.min(...values), max = Math.max(...values);
+  const values = samples.map(s => s.v), min = Math.min(...values), max = Math.max(...values);
   const step = W / samples.length;
   const level = values.map(v => (v - min + 1) / (max - min + 1));
   level.forEach((l, i) => {
@@ -204,30 +233,25 @@ function drawChart() {
     g.fillRect(x, Math.min(H - l * H, H - 2), w, 2);
   });
   if (hover !== null) { g.fillStyle = "#000"; g.fillRect((hover + 0.5) * step - 0.5, 0, 1, H); }
+  const value = (v) => `${v.toFixed(1)} ${chart.unit}`;
   const shown = samples[hover === null ? samples.length - 1 : hover];
-  $("#reading").textContent = `temp: ${shown.c.toFixed(1)} °C` + (hover === null ? "" : ` at ${clock(shown.t)}`);
-  $("#first").textContent = clock(samples[0].t);
-  $("#last").textContent = clock(samples[samples.length - 1].t);
-  $("#extent").textContent = `low ${min.toFixed(1)} °C, high ${max.toFixed(1)} °C`;
-  c.setAttribute("aria-label", `Temperature from ${$("#first").textContent} to ${$("#last").textContent}, ${$("#extent").textContent}`);
+  chart.reading.textContent = `${chart.short}: ${value(shown.v)}` + (hover === null ? "" : ` at ${clock(shown.t)}`);
+  chart.first.textContent = clock(samples[0].t);
+  chart.last.textContent = clock(samples[samples.length - 1].t);
+  chart.extent.textContent = `low ${value(min)}, high ${value(max)}`;
+  c.setAttribute("aria-label", `${chart.title} from ${chart.first.textContent} to ${chart.last.textContent}, ${chart.extent.textContent}`);
 }
 
 async function refreshChart() {
-  try { samples = (await api("/api/temperature")).samples; } catch { return; }
-  if (hover !== null && hover >= samples.length) hover = null;
-  drawChart();
+  let history;
+  try { history = await api("/api/history"); } catch { return; }
+  charts.forEach((chart) => {
+    chart.samples = history[chart.key] || [];
+    if (chart.hover !== null && chart.hover >= chart.samples.length) chart.hover = null;
+    drawChart(chart);
+  });
 }
-
-function point(e) {
-  if (!samples.length) return;
-  const box = $("#chart").getBoundingClientRect();
-  hover = Math.max(0, Math.min(samples.length - 1, Math.floor((e.clientX - box.left) / box.width * samples.length)));
-  drawChart();
-}
-$("#chart").onpointermove = point;
-$("#chart").onpointerdown = point;
-$("#chart").onpointerleave = () => { hover = null; drawChart(); };
-window.addEventListener("resize", drawChart);
+window.addEventListener("resize", () => charts.forEach(drawChart));
 
 function powerMessage(text, bad) {
   $("#powerMsg").textContent = text;

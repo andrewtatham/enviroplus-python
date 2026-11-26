@@ -1,4 +1,4 @@
-"""Tiny dependency-free web UI: holiday dates, temperature chart, restart and
+"""Tiny dependency-free web UI: holiday dates, sensor charts, restart and
 shut down. No authentication: intended for the home network only."""
 import datetime
 import json
@@ -7,9 +7,9 @@ import os
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+from helper import history
 from helper import holiday_store
 from helper import power
-from helper import temperature_history
 
 PAGE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'web', 'index.html')
 MAX_BODY = 4096
@@ -44,8 +44,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, f.read(), 'text/html; charset=utf-8')
         if path == '/api/state':
             return self._send(200, self._state())
-        if path == '/api/temperature':
-            return self._send(200, {'samples': temperature_history.samples()})
+        if path == '/api/history':
+            return self._send(200, history.samples())
         self._send(404, {'error': 'not found'})
 
     def _power(self, data):

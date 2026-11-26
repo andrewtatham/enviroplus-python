@@ -5,8 +5,8 @@ import unittest
 import urllib.error
 import urllib.request
 
+from helper import history
 from helper import power
-from helper import temperature_history
 from helper import web_server
 
 
@@ -45,15 +45,19 @@ class WebControlsTestCase(unittest.TestCase):
             with e:
                 return e.code, json.loads(e.read())
 
-    def test_temperature_keeps_the_latest_readings(self):
-        temperature_history._samples.clear()
-        self.addCleanup(temperature_history._samples.clear)
-        for i in range(temperature_history.SIZE + 5):
-            temperature_history.record(i)
+    def test_history_keeps_the_latest_readings_of_each_series(self):
+        history.clear()
+        self.addCleanup(history.clear)
+        for i in range(history.SIZE + 5):
+            history.record('temperature', i)
+        history.record('light', 12.5)
         self.serve(None)
-        samples = self.request('/api/temperature')[1]['samples']
+        series = self.request('/api/history')[1]
+        samples = series['temperature']
         self.assertEqual(len(samples), 160)
-        self.assertEqual((samples[0]['c'], samples[-1]['c']), (5, 164))
+        self.assertEqual((samples[0]['v'], samples[-1]['v']), (5, 164))
+        self.assertEqual([s['v'] for s in series['light']], [12.5])
+        self.assertEqual(series['noise'], [])
 
     def test_restart_and_shutdown_stop_the_heater_first(self):
         for action in ('restart', 'shutdown'):
