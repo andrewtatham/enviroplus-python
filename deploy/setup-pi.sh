@@ -42,4 +42,11 @@ echo "== systemd unit (installed, NOT enabled until the HAT is fitted)"
 sed -e "s|@USER@|$USER|g" -e "s|@APP_DIR@|$APP_DIR|g" \
     "$APP_DIR/deploy/enviro.service" | sudo tee /etc/systemd/system/enviro.service >/dev/null
 sudo systemctl daemon-reload
+
+echo "== allow the web UI to restart / shut down the Pi"
+RULE=$(mktemp)
+sed "s|@USER@|$USER|g" "$APP_DIR/deploy/enviro-power.sudoers" >"$RULE"
+sudo visudo -cf "$RULE"   # a broken sudoers file would lock out sudo
+sudo install -m 0440 -o root -g root "$RULE" /etc/sudoers.d/enviro-power
+rm -f "$RULE"
 echo "Enable with: sudo systemctl enable --now enviro"

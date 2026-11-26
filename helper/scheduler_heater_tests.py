@@ -176,6 +176,23 @@ class HeaterScenarioTestCase(unittest.TestCase):
         self.assertEqual(self.tick(s, self.FRI_0930, 20.0), [])
         self.assertIsNotNone(s._manual_started)
 
+    def test_stop_heating_switches_off_and_blocks_control_until_resumed(self):
+        s = self.make(forecast(5.6, -1.9, self.TODAY), heater_on=True)
+        s._kasa.switch_off = lambda: s._kasa.calls.append("off") or True
+        self.assertTrue(s.stop_heating())
+        self.assertEqual(self.tick(s, self.FRI_0930, 15.0), [])
+        s.resume_heating()
+        s._kasa._on = False
+        self.assertEqual(self.tick(s, self.FRI_0930, 15.0), ["on"])
+
+    def test_stop_heating_reports_failure(self):
+        s = self.make(None)
+
+        def unreachable():
+            raise OSError("no route")
+        s._kasa.switch_off = unreachable
+        self.assertFalse(s.stop_heating())
+
     # ---- manual sessions (heater switched on by hand outside the heating window) ----
 
     def sat(self, h, m=0):

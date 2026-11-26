@@ -18,6 +18,7 @@ import datetime
 import logging
 import platform
 import pprint
+import threading
 import time
 
 import colour
@@ -64,6 +65,10 @@ class MyScheduler:
     _manual_started = None      # when the current manual session began, else None
     _manual_resting = False     # True while the scheduler has forced a duty-cycle rest
     _scheduler_on = False       # True if the scheduler itself last switched the heater on
+
+    # Set while the Pi is restarting or shutting down (see stop_heating)
+    _powering_off = False
+    _heater_lock = threading.Lock()
 
     def __init__(self):
         self._scheduler = BlockingScheduler()
@@ -116,7 +121,28 @@ class MyScheduler:
         if self._hue.is_on:
             self._hue.do_whatever()
 
+    def stop_heating(self):
+        """Switch the heater off and stop controlling it, ahead of a restart or
+        shutdown. Returns False if the heater could not be switched off."""
+        with self._heater_lock:
+            self._powering_off = True
+            try:
+                return bool(self._kasa.switch_off())
+            except Exception as exc:
+                logging.warning('Unable to switch the heater off: {}'.format(exc))
+                return False
+
+    def resume_heating(self):
+        self._powering_off = False
+
     def _manage_heater(self):
+        with self._heater_lock:
+            if self._powering_off:
+                logging.info('Powering off, leaving the heater alone')
+                return
+            self._control_heater()
+
+    def _control_heater(self):
         now = datetime.datetime.now()
         weekday = now.weekday()
         hour = now.hour

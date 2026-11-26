@@ -78,7 +78,7 @@ class WebServerTestCase(TempStoreTestCase):
     def test_page(self):
         status, body = self.request('/')
         self.assertEqual(status, 200)
-        self.assertIn(b'Heater holidays', body)
+        self.assertIn(b'<h1>Heater</h1>', body)
 
     def test_add_and_delete(self):
         status, body = self.request('/api/add', {'from': '2027-05-04', 'note': 'trip'})

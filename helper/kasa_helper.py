@@ -20,9 +20,12 @@ class KasaWrapper:
         return False
 
     def switch_off(self):
+        """Return False if the heater could not be found."""
         heater = self.get_device('Heater')
         if heater:
             heater.turn_off()
+            return True
+        return False
 
     def switch_on(self):
         heater = self.get_device('Heater')

@@ -1,0 +1,2 @@
+# Lets the web UI restart or shut down the Pi (see helper/power.py).
+@USER@ ALL=(root) NOPASSWD: /usr/bin/systemctl --no-block reboot, /usr/bin/systemctl --no-block poweroff

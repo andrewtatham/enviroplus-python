@@ -24,6 +24,8 @@ from PIL import ImageFont
 from fonts.ttf import RobotoMedium as UserFont
 import logging
 
+from helper import temperature_history
+
 
 class EnviroWrapper:
     def __init__(self):
@@ -117,6 +119,7 @@ class EnviroWrapper:
         raw_temp = self.bme280.get_temperature()
         data = 0.995815187 * raw_temp - 0.088599162 * avg_cpu_temp
         self.display_text("temperature", data, unit)
+        temperature_history.record(data)
         message = "raw: {: .1f} cpu: {: .1f} calc: {: .1f} ".format(raw_temp, avg_cpu_temp, data)
         logging.info(message)
         return data
